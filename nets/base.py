@@ -7,6 +7,7 @@ import os
 import keras
 import numpy as np
 from loggers.base import EmopyLogger
+from constants import EMOTIONS
 
 
 class NeuralNet(object):
@@ -21,19 +22,19 @@ class NeuralNet(object):
     
     def __init__(self,input_shape,logger=None):
         self.input_shape = input_shape
-        self.model = self.build()
         if logger is None:
             self.logger = EmopyLogger()
         else:
             self.logger = logger
         self.models_local_folder = "nn"
+        self.feature_extractors = ["image"]
+        self.number_of_class = len(EMOTIONS)
+        print(self.number_of_class)
+        self.model = self.build()
         
     def build(self):
         """
         Build neural network model
-        
-        Parameters
-        ----------
         
         Returns 
         -------
@@ -51,11 +52,18 @@ class NeuralNet(object):
         model.add(Flatten())
         model.add(Dense(128, activation='relu'))
         model.add(Dropout(0.2))
-        model.add(Dense(7, activation='softmax'))
-        self.feature_extractors = ["image"]
+        model.add(Dense(self.number_of_class, activation='softmax'))
+        
         self.built = True
         return model
     def save_model(self):
+        """
+        Saves NeuralNet model. The naming convention is for json and h5 files is,
+        `/path-to-models/model-local-folder-model-number.json` and  
+        `/path-to-models/model-local-folder-model-number.h5` respectively.
+        This method also increments model_number inside "model_number.txt" file.
+        """
+        
         if not os.path.exists(PATH2SAVE_MODELS):
             os.makedirs(PATH2SAVE_MODELS)
         if not os.path.exists(os.path.join(PATH2SAVE_MODELS,self.models_local_folder)):
@@ -72,6 +80,15 @@ class NeuralNet(object):
         model_number.tofile(os.path.join(PATH2SAVE_MODELS,self.models_local_folder,"model_number.txt"))
 
     def train(self):
+        """Traines the neuralnet model.      
+        This method requires the following two directory to exist
+        /PATH-TO-DATASET-DIR/train
+        /PATH-TO-DATASET-DIR/test
+        
+        """
+        assert os.path.exists(os.path.join(DATA_SET_DIR,"train")), "Training dataset path :"+os.path.join(DATA_SET_DIR,"train")+", doesnot exist." 
+        assert os.path.exists(os.path.join(DATA_SET_DIR,"test")), "Test dataset path :"+os.path.join(DATA_SET_DIR,"train")+", doesnot exist." 
+        
         x_train, y_train = load_dataset(os.path.join(DATA_SET_DIR,"train"),True)
         x_test , y_test  = load_dataset(os.path.join(DATA_SET_DIR,"test"),True)
 
@@ -81,8 +98,8 @@ class NeuralNet(object):
         x_test = x_test.reshape(image_shape)
 
 
-        y_train = np.eye(7)[y_train]
-        y_test = np.eye(7)[y_test]
+        y_train = np.eye(self.number_of_class)[y_train]
+        y_test = np.eye(self.number_of_class)[y_test]
         self.model.compile(loss=keras.losses.categorical_crossentropy,
                     optimizer=keras.optimizers.Adam(LEARNING_RATE),
                     metrics=['accuracy'])
