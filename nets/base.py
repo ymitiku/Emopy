@@ -1,6 +1,7 @@
 from keras.layers  import Input, Flatten, Dense, Conv2D, MaxPooling2D, Dropout
 from keras.models import Sequential,Model
 from config import LEARNING_RATE, EPOCHS,BATCH_SIZE,DATA_SET_DIR
+from config import PATH2SAVE_MODELS
 from preprocess.dataset_process import load_dataset
 import os
 import keras
@@ -25,6 +26,8 @@ class NeuralNet(object):
             self.logger = EmopyLogger()
         else:
             self.logger = logger
+        self.models_local_folder = "nn"
+        
     def build(self):
         """
         Build neural network model
@@ -52,8 +55,22 @@ class NeuralNet(object):
         self.feature_extractors = ["image"]
         self.built = True
         return model
-    def save_model(self,model):
-        pass
+    def save_model(self):
+        if not os.path.exists(PATH2SAVE_MODELS):
+            os.makedirs(PATH2SAVE_MODELS)
+        if not os.path.exists(os.path.join(PATH2SAVE_MODELS,self.models_local_folder)):
+            os.makedirs(os.path.join(PATH2SAVE_MODELS,self.models_local_folder))
+        if not os.path.exists(os.path.join(PATH2SAVE_MODELS,self.models_local_folder,"model_number.txt")):
+            model_number = np.array([0])
+        else:
+            model_number = np.fromfile(os.path.join(PATH2SAVE_MODELS,self.models_local_folder,"model_number.txt"),dtype=int)
+        model_file_name = self.models_local_folder+"-"+str(model_number[0])
+        with open(os.path.join(PATH2SAVE_MODELS,self.models_local_folder,model_file_name+".json"),"a+") as jfile:
+            jfile.write(self.model.to_json())
+        self.model.save_weights(os.path.join(PATH2SAVE_MODELS,self.models_local_folder,model_file_name+".h5"))
+        model_number[0]+=1
+        model_number.tofile(os.path.join(PATH2SAVE_MODELS,self.models_local_folder,"model_number.txt"))
+
     def train(self):
         x_train, y_train = load_dataset(os.path.join(DATA_SET_DIR,"train"),True)
         x_test , y_test  = load_dataset(os.path.join(DATA_SET_DIR,"test"),True)
@@ -71,7 +88,7 @@ class NeuralNet(object):
                     metrics=['accuracy'])
         self.model.fit(x_train,y_train,epochs = EPOCHS, 
                         batch_size = BATCH_SIZE,validation_data=(x_test,y_test))
-
+        self.save_model()
 
     def test(self):
         pass
