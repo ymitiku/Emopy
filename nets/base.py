@@ -21,7 +21,7 @@ class NeuralNet(object):
     
     """
     
-    def __init__(self,input_shape,logger=None):
+    def __init__(self,input_shape,logger=None,train=True):
         self.input_shape = input_shape
         self.models_local_folder = "nn"
         self.logs_local_folder = self.models_local_folder
@@ -33,8 +33,11 @@ class NeuralNet(object):
             self.logger = logger
         self.feature_extractors = ["image"]
         self.number_of_class = len(EMOTIONS)
-        self.model = self.build()
-        
+        if train:
+            self.model = self.build()
+        else:
+            self.model = self.load_model()
+
     def build(self):
         """
         Build neural network model
@@ -59,23 +62,7 @@ class NeuralNet(object):
         
         self.built = True
         return model
-    def log_model(self,score):
-        model_number = np.fromfile(os.path.join(PATH2SAVE_MODELS,self.models_local_folder,"model_number.txt"),dtype=int)
-        model_file_name = self.models_local_folder+"-"+str(model_number[0]-1)
-    
-        self.logger.log("**************************************")
-        self.logger.log("Trained model "+model_file_name+".json")
-        self.logger.log(time.strftime("%A %B %d,%Y %I:%M%p"))
-        self.logger.log("Dataset dir: "+DATA_SET_DIR)
-        self.logger.log("Parameters")
-        self.logger.log("_______________________________________")
-        self.logger.log("Batch-Size    : "+str(BATCH_SIZE))
-        self.logger.log("Epoches       : "+str(EPOCHS))
-        self.logger.log("Learning rate : "+str(LEARNING_RATE))
-        self.logger.log("_______________________________________")
-        self.logger.log("Loss          : "+str(score[0]))
-        self.logger.log("Accuracy      : "+str(score[1]))
-        self.logger.log("**************************************")
+
         
     def save_model(self):
         """
@@ -128,7 +115,7 @@ class NeuralNet(object):
                         batch_size = BATCH_SIZE,validation_data=(x_test,y_test))
         score = self.model.evaluate(x_test,y_test)
         self.save_model()
-        self.log_model(score)
+        self.logger.log_model(self.models_local_folder, score)
 
     def test(self):
         pass
