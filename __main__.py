@@ -1,5 +1,3 @@
-from nets.base import NeuralNet
+from runners import run
 
-
-nn = NeuralNet((48,48,1))
-nn.train()
+run()
