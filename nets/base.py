@@ -1,6 +1,6 @@
 from keras.layers  import Input, Flatten, Dense, Conv2D, MaxPooling2D, Dropout
 from keras.models import Sequential,Model
-from config import LEARNING_RATE, EPOCHS,BATCH_SIZE,DATA_SET_DIR
+from config import LEARNING_RATE, EPOCHS,BATCH_SIZE,DATA_SET_DIR,LOG_DIR
 from config import PATH2SAVE_MODELS
 from preprocess.dataset_process import load_dataset
 import os
@@ -8,6 +8,7 @@ import keras
 import numpy as np
 from loggers.base import EmopyLogger
 from constants import EMOTIONS
+import time
 
 
 class NeuralNet(object):
@@ -22,14 +23,16 @@ class NeuralNet(object):
     
     def __init__(self,input_shape,logger=None):
         self.input_shape = input_shape
+        self.models_local_folder = "nn"
+        self.logs_local_folder = self.models_local_folder
         if logger is None:
-            self.logger = EmopyLogger()
+            if not os.path.exists(os.path.join(LOG_DIR,self.logs_local_folder)):
+                os.makedirs(os.path.join(LOG_DIR,self.logs_local_folder))
+            self.logger = EmopyLogger([os.path.join(LOG_DIR,self.logs_local_folder,"nn.txt")])
         else:
             self.logger = logger
-        self.models_local_folder = "nn"
         self.feature_extractors = ["image"]
         self.number_of_class = len(EMOTIONS)
-        print(self.number_of_class)
         self.model = self.build()
         
     def build(self):
@@ -56,6 +59,24 @@ class NeuralNet(object):
         
         self.built = True
         return model
+    def log_model(self,score):
+        model_number = np.fromfile(os.path.join(PATH2SAVE_MODELS,self.models_local_folder,"model_number.txt"),dtype=int)
+        model_file_name = self.models_local_folder+"-"+str(model_number[0]-1)
+    
+        self.logger.log("**************************************")
+        self.logger.log("Trained model "+model_file_name+".json")
+        self.logger.log(time.strftime("%A %B %d,%Y %I:%M%p"))
+        self.logger.log("Dataset dir: "+DATA_SET_DIR)
+        self.logger.log("Parameters")
+        self.logger.log("_______________________________________")
+        self.logger.log("Batch-Size    : "+str(BATCH_SIZE))
+        self.logger.log("Epoches       : "+str(EPOCHS))
+        self.logger.log("Learning rate : "+str(LEARNING_RATE))
+        self.logger.log("_______________________________________")
+        self.logger.log("Loss          : "+str(score[0]))
+        self.logger.log("Accuracy      : "+str(score[1]))
+        self.logger.log("**************************************")
+        
     def save_model(self):
         """
         Saves NeuralNet model. The naming convention is for json and h5 files is,
@@ -87,13 +108,13 @@ class NeuralNet(object):
         
         """
         assert os.path.exists(os.path.join(DATA_SET_DIR,"train")), "Training dataset path :"+os.path.join(DATA_SET_DIR,"train")+", doesnot exist." 
-        assert os.path.exists(os.path.join(DATA_SET_DIR,"test")), "Test dataset path :"+os.path.join(DATA_SET_DIR,"train")+", doesnot exist." 
+        assert os.path.exists(os.path.join(DATA_SET_DIR,"test")), "Test dataset path :"+os.path.join(DATA_SET_DIR,"test")+", doesnot exist." 
         
         x_train, y_train = load_dataset(os.path.join(DATA_SET_DIR,"train"),True)
         x_test , y_test  = load_dataset(os.path.join(DATA_SET_DIR,"test"),True)
 
         image_shape = (-1 , self.input_shape[0], self.input_shape[1], self.input_shape[2])
-        print(image_shape)
+        
         x_train = x_train.reshape(image_shape)
         x_test = x_test.reshape(image_shape)
 
@@ -105,7 +126,9 @@ class NeuralNet(object):
                     metrics=['accuracy'])
         self.model.fit(x_train,y_train,epochs = EPOCHS, 
                         batch_size = BATCH_SIZE,validation_data=(x_test,y_test))
+        score = self.model.evaluate(x_test,y_test)
         self.save_model()
+        self.log_model(score)
 
     def test(self):
         pass
