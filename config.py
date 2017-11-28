@@ -1,4 +1,5 @@
 DATA_SET_DIR = "/home/mtk/iCog/projects/emopy/dataset/ck"
+LOG_DIR = "logs"
 SESSION = 0 # O For training and 1 for test
 PATH2SAVE_MODELS = "models"
 CURRENT_MODEL = "" # model name used for testing
