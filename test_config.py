@@ -1,0 +1,1 @@
+MODEL_PATH = "models/nn/nn-0" # model name used for testing

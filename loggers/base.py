@@ -1,7 +1,7 @@
 from __future__ import print_function
 import sys
 import os
-from config import PATH2SAVE_MODELS,DATA_SET_DIR,LOG_DIR,BATCH_SIZE,EPOCHS,LEARNING_RATE
+from train_config import PATH2SAVE_MODELS,DATA_SET_DIR,LOG_DIR, BATCH_SIZE,EPOCHS,LEARNING_RATE
 import numpy as np
 import time
 

@@ -11,4 +11,6 @@ def run_train():
     neuralNet = NeuralNet(input_shape)
     neuralNet.train()
 def run_test():
-    raise NotImplementedError("NOt implemented yet!")
+    input_shape = (IMG_SIZE[0],IMG_SIZE[1],1)
+    neuralNet = NeuralNet(input_shape)
+    neuralNet.train()

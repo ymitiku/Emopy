@@ -1,14 +1,15 @@
 from keras.layers  import Input, Flatten, Dense, Conv2D, MaxPooling2D, Dropout
 from keras.models import Sequential,Model
-from config import LEARNING_RATE, EPOCHS,BATCH_SIZE,DATA_SET_DIR,LOG_DIR
-from config import PATH2SAVE_MODELS
+from train_config import LEARNING_RATE,EPOCHS,BATCH_SIZE,DATA_SET_DIR,LOG_DIR,PATH2SAVE_MODELS
+
 from preprocess.dataset_process import load_dataset
 import os
 import keras
 import numpy as np
 from loggers.base import EmopyLogger
-from constants import EMOTIONS
+from constants import EMOTIONS,IMG_SIZE
 import time
+
 
 
 class NeuralNet(object):
@@ -25,9 +26,9 @@ class NeuralNet(object):
         self.input_shape = input_shape
         self.models_local_folder = "nn"
         self.logs_local_folder = self.models_local_folder
+        if not os.path.exists(os.path.join(LOG_DIR,self.logs_local_folder)):
+            os.makedirs(os.path.join(LOG_DIR,self.logs_local_folder))
         if logger is None:
-            if not os.path.exists(os.path.join(LOG_DIR,self.logs_local_folder)):
-                os.makedirs(os.path.join(LOG_DIR,self.logs_local_folder))
             self.logger = EmopyLogger([os.path.join(LOG_DIR,self.logs_local_folder,"nn.txt")])
         else:
             self.logger = logger
@@ -63,6 +64,11 @@ class NeuralNet(object):
         self.built = True
         return model
 
+    def load_model(self,model_path):
+        with open(model_path+".json") as model_file:
+            model = model_from_json(model_file.read())
+            model.load_weights(model_path+".h5")
+            return model
         
     def save_model(self):
         """
@@ -117,5 +123,8 @@ class NeuralNet(object):
         self.save_model()
         self.logger.log_model(self.models_local_folder, score)
 
-    def test(self):
-        pass
+    def predict(self,face):
+        assert face.shape == IMG_SIZE, "Face image size should be "+str(IMG_SIZE)
+        emotion = self.model.predict(face)
+        print(emotion)
+        return emotion
