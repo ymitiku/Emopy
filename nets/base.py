@@ -1,7 +1,7 @@
 from keras.layers  import Input, Flatten, Dense, Conv2D, MaxPooling2D, Dropout
-from keras.models import Sequential,Model
+from keras.models import Sequential,Model, model_from_json
 from train_config import LEARNING_RATE,EPOCHS,BATCH_SIZE,DATA_SET_DIR,LOG_DIR,PATH2SAVE_MODELS
-
+from test_config import MODEL_PATH
 from preprocess.dataset_process import load_dataset
 import os
 import keras
@@ -9,6 +9,7 @@ import numpy as np
 from loggers.base import EmopyLogger
 from constants import EMOTIONS,IMG_SIZE
 import time
+
 
 
 
@@ -37,7 +38,7 @@ class NeuralNet(object):
         if train:
             self.model = self.build()
         else:
-            self.model = self.load_model()
+            self.model = self.load_model(MODEL_PATH)
 
     def build(self):
         """
@@ -122,9 +123,20 @@ class NeuralNet(object):
         score = self.model.evaluate(x_test,y_test)
         self.save_model()
         self.logger.log_model(self.models_local_folder, score)
+    def arg_max(self,array):
+        max_value = array[0]
+        index=0
+        for i in range(1,len(array)):
+            print array[i]
+            if max_value<array[i]:
+                max_value = array[i]
+                index = i
+        return index
 
     def predict(self,face):
         assert face.shape == IMG_SIZE, "Face image size should be "+str(IMG_SIZE)
-        emotion = self.model.predict(face)
-        print(emotion)
-        return emotion
+        face = face.reshape(-1,48,48,1)
+        emotions = self.model.predict(face)
+        emotion = self.arg_max(emotions[0])
+        print EMOTIONS[emotion]
+        return emotions

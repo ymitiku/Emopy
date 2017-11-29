@@ -17,6 +17,16 @@ def string2emotion(string):
         if EMOTIONS[emotion] == string:
             return emotion
     raise Exception("Could not found emotion "+str(string))
+def get_faces(frame,detector):
+    faces = detector(frame)
+    output = []
+    for face in faces:
+        top = max(0,face.top())
+        left = max(0,face.left())
+        bottom = min(frame.shape[0],face.bottom())
+        right = min(frame.shape[1],face.right())
+        output.append(frame[top:bottom, left:right])
+    return output
 def load_dataset(directory,verbose=False):
     if verbose:
         print("Loading dataset from ",directory, "dir")

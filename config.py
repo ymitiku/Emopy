@@ -1,3 +1,3 @@
 
-SESSION = 0 # O For training and 1 for test
+SESSION = 'test' # this value should be either 'test' or 'train'
 VERBOSE = True
