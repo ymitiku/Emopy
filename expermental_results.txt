@@ -1,0 +1,8 @@
+1. Replacing max pooling with conv layers with strides 
+    . slows learning rate
+    . reduces test accuracy 
+    . increases overfitting rate
+2. Adding dropout layer increases training time.
+3. Large learning rate with dropout layer after each 
+    conv layer might hinder learning
+4. 
