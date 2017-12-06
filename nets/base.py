@@ -1,14 +1,15 @@
 from keras.layers  import Input, Flatten, Dense, Conv2D, MaxPooling2D, Dropout
 from keras.models import Sequential,Model, model_from_json
-from train_config import LEARNING_RATE,EPOCHS,BATCH_SIZE,DATA_SET_DIR,LOG_DIR,PATH2SAVE_MODELS
+from train_config import LEARNING_RATE,EPOCHS,BATCH_SIZE,DATA_SET_DIR,LOG_DIR,PATH2SAVE_MODELS,STEPS_PER_EPOCH
 from test_config import MODEL_PATH
-from preprocess.dataset_process import load_dataset
 import os
 import keras
 import numpy as np
 from loggers.base import EmopyLogger
-from constants import EMOTIONS,IMG_SIZE
 import time
+from util import SevenEmotionsClassifier
+from config import IMG_SIZE
+
 
 
 
@@ -23,10 +24,13 @@ class NeuralNet(object):
     
     """
     
-    def __init__(self,input_shape,logger=None,train=True):
+    def __init__(self,input_shape,preprocessor = None,logger=None,train=True):
         self.input_shape = input_shape
+        assert len(input_shape) == 3, "Input shape of neural network should be length of 3. e.g (48,48,1)" 
         self.models_local_folder = "nn"
         self.logs_local_folder = self.models_local_folder
+        self.preprocessor = preprocessor
+        
         if not os.path.exists(os.path.join(LOG_DIR,self.logs_local_folder)):
             os.makedirs(os.path.join(LOG_DIR,self.logs_local_folder))
         if logger is None:
@@ -34,11 +38,14 @@ class NeuralNet(object):
         else:
             self.logger = logger
         self.feature_extractors = ["image"]
-        self.number_of_class = len(EMOTIONS)
+        self.number_of_class = self.preprocessor.classifier.get_num_class()
         if train:
             self.model = self.build()
         else:
             self.model = self.load_model(MODEL_PATH)
+        self.epochs = EPOCHS
+        self.batch_size = BATCH_SIZE
+        self.steps_per_epoch = STEPS_PER_EPOCH
 
     def build(self):
         """
@@ -101,31 +108,23 @@ class NeuralNet(object):
         /PATH-TO-DATASET-DIR/test
         
         """
-        assert os.path.exists(os.path.join(DATA_SET_DIR,"train")), "Training dataset path :"+os.path.join(DATA_SET_DIR,"train")+", doesnot exist." 
-        assert os.path.exists(os.path.join(DATA_SET_DIR,"test")), "Test dataset path :"+os.path.join(DATA_SET_DIR,"test")+", doesnot exist." 
         
-        x_train, y_train = load_dataset(os.path.join(DATA_SET_DIR,"train"),True)
-        x_test , y_test  = load_dataset(os.path.join(DATA_SET_DIR,"test"),True)
-
-        image_shape = (-1 , self.input_shape[0], self.input_shape[1], self.input_shape[2])
         
-        x_train = x_train.reshape(image_shape)
-        x_test = x_test.reshape(image_shape)
-
-
-        y_train = np.eye(self.number_of_class)[y_train]
-        y_test = np.eye(self.number_of_class)[y_test]
         self.model.compile(loss=keras.losses.categorical_crossentropy,
                     optimizer=keras.optimizers.Adam(LEARNING_RATE),
                     metrics=['accuracy'])
-        self.model.fit(x_train,y_train,epochs = EPOCHS, 
-                        batch_size = BATCH_SIZE,validation_data=(x_test,y_test))
-        score = self.model.evaluate(x_test,y_test)
+        # self.model.fit(x_train,y_train,epochs = EPOCHS, 
+        #                 batch_size = BATCH_SIZE,validation_data=(x_test,y_test))
+        self.preprocessor = self.preprocessor(DATA_SET_DIR)
+        self.model.fit_generator(self.preprocessor.flow(),steps_per_epoch=self.steps_per_epoch,
+                        epochs=self.epochs,
+                        validation_data=(self.preprocessor.test_images, self.preprocessor.test_image_emotions))
+        score = self.model.evaluate(self.preprocessor.test_images, self.preprocessor.test_image_emotions)
         self.save_model()
         self.logger.log_model(self.models_local_folder, score)
 
     def predict(self,face):
         assert face.shape == IMG_SIZE, "Face image size should be "+str(IMG_SIZE)
         face = face.reshape(-1,48,48,1)
-        emotions = self.model.predict(face)
+        emotions = self.model.predict(face)[0]
         return emotions

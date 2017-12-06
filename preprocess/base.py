@@ -3,6 +3,7 @@ import os
 from sklearn.utils import shuffle
 import numpy as np
 import cv2
+import dlib
 
 
 class Preprocessor(object):
@@ -55,6 +56,7 @@ class Preprocessor(object):
         self.called = True
         assert len(self.train_image_emotions) == len(self.train_image_paths), "number of train inputs are not equal to train labels"
         assert len(self.test_image_emotions) == len(self.test_image_paths), "number of test inputs are not equal to test labels"
+        
         self.train_image_emotions = np.array(self.train_image_emotions)
         self.train_image_paths = np.array(self.train_image_paths)
         self.test_images = self.get_images(self.test_image_paths).reshape(-1,self.input_shape[0],self.input_shape[1],self.input_shape[2])
@@ -96,3 +98,15 @@ class Preprocessor(object):
             output[i] = img
         return output
     
+    def get_faces(self,frame,detector):
+        faces = detector(frame)
+        output = []
+        rectangles =[]
+        for face in faces:
+            top = max(0,face.top())
+            left = max(0,face.left())
+            bottom = min(frame.shape[0],face.bottom())
+            right = min(frame.shape[1],face.right())
+            rectangles.append(dlib.rectangle(left,top,right,bottom));
+            output.append(frame[top:bottom, left:right])
+        return output,rectangles

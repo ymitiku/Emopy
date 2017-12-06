@@ -1,11 +1,11 @@
-from config import SESSION
+from config import SESSION,IMG_SIZE
 from nets.base import NeuralNet
-from constants import IMG_SIZE
 from test_config import TEST_TYPE, TEST_IMAGE
-from preprocess.dataset_process import sanitize, get_faces
-from postprocess.base import PostProcessor
 import cv2
 import dlib
+from util import SevenEmotionsClassifier
+from preprocess.base import Preprocessor
+from postprocess.base import PostProcessor
 
 
 def run():
@@ -15,26 +15,33 @@ def run():
         run_test()
 def run_train():
     input_shape = (IMG_SIZE[0],IMG_SIZE[1],1)
-    neuralNet = NeuralNet(input_shape)
+    classifier = SevenEmotionsClassifier()
+    preprocessor = Preprocessor(classifier,input_shape = input_shape)
+    neuralNet = NeuralNet(input_shape,preprocessor,train=True)
     neuralNet.train()
+
 
 def run_test():
     input_shape = (IMG_SIZE[0],IMG_SIZE[1],1)
-    neuralNet = NeuralNet(input_shape,train = False)
-    postProcessor = PostProcessor()
+    classifier = SevenEmotionsClassifier()
+    preprocessor = Preprocessor(classifier,input_shape = input_shape)
+    postProcessor = PostProcessor(classifier)
+    neuralNet = NeuralNet(input_shape,preprocessor = preprocessor,train = False)
     face_detector = dlib.get_frontal_face_detector()
 
     if TEST_TYPE=="image":
         img = cv2.imread(TEST_IMAGE)
-        faces = get_faces(img,face_detector)
-        for face in faces:
-            f = sanitize(face)
-            predictions = neuralNet.predict(f)
-            emotion = postProcessor.arg_max(predictions[0])
-            emotion_string = postProcessor.emotion2string(emotion)
-            print emotion_string
-            print predictions
-        # print predictions
+        faces,rectangles = preprocessor.get_faces(img,face_detector)
+        predictions = []
+        for i in range(len(faces)):
+            face = preprocessor.sanitize(faces[i])
+            predictions.append(neuralNet.predict(face))
+
+        postProcessor = postProcessor(img,rectangles,predictions)
+        cv2.imshow("Image",img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+    
     elif TEST_TYPE =="video":
         pass
     elif TEST_TYPE == "webcam":
