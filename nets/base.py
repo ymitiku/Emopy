@@ -123,20 +123,9 @@ class NeuralNet(object):
         score = self.model.evaluate(x_test,y_test)
         self.save_model()
         self.logger.log_model(self.models_local_folder, score)
-    def arg_max(self,array):
-        max_value = array[0]
-        index=0
-        for i in range(1,len(array)):
-            print array[i]
-            if max_value<array[i]:
-                max_value = array[i]
-                index = i
-        return index
 
     def predict(self,face):
         assert face.shape == IMG_SIZE, "Face image size should be "+str(IMG_SIZE)
         face = face.reshape(-1,48,48,1)
         emotions = self.model.predict(face)
-        emotion = self.arg_max(emotions[0])
-        print EMOTIONS[emotion]
         return emotions
