@@ -4,7 +4,8 @@ from sklearn.utils import shuffle
 import numpy as np
 import cv2
 import dlib
-
+from keras.preprocessing.image import ImageDataGenerator
+from feature_extraction import ImageFeatureExtractor
 
 class Preprocessor(object):
     """"Base class for preprocessors.
@@ -26,15 +27,15 @@ class Preprocessor(object):
         self.batch_size = batch_size
         self.called = False
         self.verbose = verbose
-    """Preprocess given path
+        self.feature_extractor = ImageFeatureExtractor()
+    """Load dataset with given path
     
     parameters
     ----------
     path    : str
         path to directory containing training and test directory.
     """
-    
-    def __call__(self,path):
+    def load_dataset(self,path):
         assert os.path.exists(path),"Specified dataset directory '"+path+"' does not exist "
         train_test_dir = os.listdir(path)
         assert "train" in train_test_dir , "Specified dataset directory '"+path+"' does not  contain train directory." 
@@ -53,15 +54,25 @@ class Preprocessor(object):
             for img_file in os.listdir(os.path.join(path,"test",emdir)):
                 self.test_image_paths.append(os.path.join(path,"test",emdir,img_file))
                 self.test_image_emotions.append(self.classifier.get_class(emdir))
-        self.called = True
         assert len(self.train_image_emotions) == len(self.train_image_paths), "number of train inputs are not equal to train labels"
         assert len(self.test_image_emotions) == len(self.test_image_paths), "number of test inputs are not equal to test labels"
-        
         self.train_image_emotions = np.array(self.train_image_emotions)
         self.train_image_paths = np.array(self.train_image_paths)
         self.test_images = self.get_images(self.test_image_paths).reshape(-1,self.input_shape[0],self.input_shape[1],self.input_shape[2])
         self.test_image_emotions = np.eye(self.classifier.get_num_class()) [np.array(self.test_image_emotions)]
+    """Preprocess given path
+    
+    parameters
+    ----------
+    path    : str
+        path to directory containing training and test directory.
+    """
+    def __call__(self,path):
+        self.load_dataset(path)        
+        self.test_images = self.feature_extractor.extract(self.test_images);
+        
 
+        self.called = True
         return self
     def generate_indexes(self,random=True):
         indexes = range(len(self.train_image_emotions))
@@ -78,6 +89,7 @@ class Preprocessor(object):
                 current_paths = self.train_image_paths[current_indexes]
                 current_emotions = self.train_image_emotions[current_indexes]
                 current_images = self.get_images(current_paths).reshape(-1,self.input_shape[0],self.input_shape[1],self.input_shape[2])
+                current_images = self.feature_extractor.extract(current_images)
                 current_emotions = np.eye(self.classifier.get_num_class())[current_emotions]
                 yield current_images,current_emotions
     
