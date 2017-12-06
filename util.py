@@ -1,4 +1,12 @@
-class SevenEmotionsClassifier(object):
+class Classifier(object):
+    def get_num_class(self):
+        raise Exception("Not implemented yet")
+    def get_string(self,emotion):
+        raise Exception("Not implemented yet")
+    def get_class(self,string):
+        raise Exception("Not implemented yet")
+
+class SevenEmotionsClassifier(Classifier):
     def __init__(self):
         self.EMOTIONS = {
             0 : "anger",
@@ -20,7 +28,7 @@ class SevenEmotionsClassifier(object):
         raise Exception("Emotion "+string(string) +" is not recognized")
 
 
-class PositiveNeutralClassifier(object):
+class PositiveNeutralClassifier(Classifier):
     def __init__(self):
         self.EMOTION_STATE = {
             "happy" : 1,
@@ -39,17 +47,17 @@ class PositiveNeutralClassifier(object):
         assert string in ["happy","neutral","surprise"],"Emotion must be either happy, neutral or surprise for Positive neutral classifier"
         return self.EMOTION_STATE[string]
     
-class PositiveNegetiveClassifier(object):
-        def __init__(self):
+class PositiveNegetiveClassifier(Classifier):
+    def __init__(self):
         self.EMOTION_STATE = {
-            "happy" : 1,
-            "surprise": 1,
-            "neutral": 0,
-            "anger": 2,
-            "disgust":2,
-            "sad": 2,
-            "fear":2
-        }
+                "happy" : 1,
+                "surprise": 1,
+                "neutral": 0,
+                "anger": 2,
+                "disgust":2,
+                "sad": 2,
+                "fear":2
+            }
     def get_num_class(self):
         return 3
     def get_string(self,emotion):
