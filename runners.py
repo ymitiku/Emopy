@@ -8,7 +8,7 @@ from preprocess.base import Preprocessor
 from postprocess.base import PostProcessor
 from preprocess.multinput import MultiInputPreprocessor
 from nets.multinput import MultiInputNeuralNet
-
+from train_config import NETWORK_TYPE,AUGMENTATION
 
 def run():
     if SESSION == 'train':
@@ -18,8 +18,16 @@ def run():
 def run_train():
     input_shape = (IMG_SIZE[0],IMG_SIZE[1],1)
     classifier = SevenEmotionsClassifier()
-    preprocessor = MultiInputPreprocessor(classifier,input_shape = input_shape,augmentation = True)
-    neuralNet = MultiInputNeuralNet(input_shape,preprocessor=preprocessor,train=True)
+    if(NETWORK_TYPE == "mi"):
+        preprocessor = MultiInputPreprocessor(classifier,input_shape = input_shape,augmentation = AUGMENTATION)
+        neuralNet = MultiInputNeuralNet(input_shape,preprocessor=preprocessor,train=True)
+    elif NETWORK_TYPE == "si":
+        preprocessor = Preprocessor(classifier,input_shape = input_shape,augmentation = AUGMENTATION)
+        neuralNet = NeuralNet(input_shape,preprocessor=preprocessor,train=True)
+
+    
+
+    
     neuralNet.train()
 
 

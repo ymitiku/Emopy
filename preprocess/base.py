@@ -31,10 +31,11 @@ class Preprocessor(object):
         if augmentation:
             self.datagenerator = ImageDataGenerator(
                 rotation_range = 40,
-                width_shift_range = 0.2,
-                height_shift_range = 0.2,
-                shear_range = 0.3,
-                zoom_range = 0.3,
+                width_shift_range = 0.1,
+                height_shift_range = 0.1,
+                shear_range = 0.1,
+                zoom_range = 0.1,
+                horizontal_flip=True,
                  
             )
         self.feature_extractor = ImageFeatureExtractor()
