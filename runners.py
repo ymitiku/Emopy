@@ -6,6 +6,8 @@ import dlib
 from util import SevenEmotionsClassifier
 from preprocess.base import Preprocessor
 from postprocess.base import PostProcessor
+from preprocess.multinput import MultiInputPreprocessor
+from nets.multinput import MultiInputNeuralNet
 
 
 def run():
@@ -16,8 +18,8 @@ def run():
 def run_train():
     input_shape = (IMG_SIZE[0],IMG_SIZE[1],1)
     classifier = SevenEmotionsClassifier()
-    preprocessor = Preprocessor(classifier,input_shape = input_shape)
-    neuralNet = NeuralNet(input_shape,preprocessor,train=True)
+    preprocessor = MultiInputPreprocessor(classifier,input_shape = input_shape,augmentation = True)
+    neuralNet = MultiInputNeuralNet(input_shape,preprocessor=preprocessor,train=True)
     neuralNet.train()
 
 

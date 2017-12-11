@@ -21,12 +21,22 @@ class Preprocessor(object):
         batch size for generating batch of images
     """
     
-    def __init__(self,classifier, input_shape = None,batch_size=32,verbose = True):
+    def __init__(self,classifier, input_shape = None,batch_size=32,augmentation = False,verbose = True):
         self.classifier = classifier
         self.input_shape = input_shape
         self.batch_size = batch_size
         self.called = False
         self.verbose = verbose
+        self.augmentation = augmentation
+        if augmentation:
+            self.datagenerator = ImageDataGenerator(
+                rotation_range = 40,
+                width_shift_range = 0.2,
+                height_shift_range = 0.2,
+                shear_range = 0.3,
+                zoom_range = 0.3,
+                 
+            )
         self.feature_extractor = ImageFeatureExtractor()
     """Load dataset with given path
     
@@ -88,7 +98,7 @@ class Preprocessor(object):
                 current_indexes = indexes[i:i+self.batch_size]
                 current_paths = self.train_image_paths[current_indexes]
                 current_emotions = self.train_image_emotions[current_indexes]
-                current_images = self.get_images(current_paths).reshape(-1,self.input_shape[0],self.input_shape[1],self.input_shape[2])
+                current_images = self.get_images(current_paths,self.augmentation).reshape(-1,self.input_shape[0],self.input_shape[1],self.input_shape[2])
                 current_images = self.feature_extractor.extract(current_images)
                 current_emotions = np.eye(self.classifier.get_num_class())[current_emotions]
                 yield current_images,current_emotions
@@ -102,11 +112,16 @@ class Preprocessor(object):
         return image
     
     
-    def get_images(self,paths):
-        output = np.zeros(shape=(len(paths),self.input_shape[0],self.input_shape[1]),dtype=float)
+    def get_images(self,paths,augmentation = False):
+        output = np.zeros(shape=(len(paths),self.input_shape[0],self.input_shape[1]),dtype=np.uint8)
         for i in range(len(paths)):
             img = cv2.imread(paths[i])
             img = self.sanitize(img)
+            if(augmentation):
+                img_shape = img.shape
+                img = img.reshape((-1,img_shape[0],img_shape[1]))
+                img = self.datagenerator.random_transform(img)
+                img = img.reshape((img_shape[0],img_shape[1]))
             output[i] = img
         return output
     

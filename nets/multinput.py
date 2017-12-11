@@ -58,34 +58,39 @@ class MultiInputNeuralNet(NeuralNet):
             neural network model
         """
         image_input_layer = Input(shape=self.input_shape)
-        image_layer = Conv2D(256, (3, 3), activation='relu',padding= "valid",kernel_initializer="glorot_normal")(image_input_layer)
+        image_layer = Conv2D(32, (7, 7), activation='relu',padding= "valid",kernel_initializer="glorot_normal")(image_input_layer)
+        image_layer = Dropout(.2)(image_layer)
         image_layer = MaxPooling2D(pool_size=(2, 2))(image_layer)
-        image_layer = Conv2D(256,(3,3),activation = "relu",padding="valid")(image_layer)
+        image_layer = Conv2D(64,(7,7),activation = "relu",padding="valid")(image_layer)
+        image_layer = Dropout(.2)(image_layer)
+        image_layer = MaxPooling2D(pool_size=(2, 2))(image_layer)
+        image_layer = Conv2D(128,(7,7),activation = "relu",padding="valid")(image_layer)
+        image_layer = Dropout(.2)(image_layer)
 
         image_layer = Flatten()(image_layer)
 
         dlib_points_input_layer = Input(shape=(1,68,2))
-        dlib_points_layer = Conv2D(256, (3, 3), activation='relu',padding= "valid",kernel_initializer="glorot_normal")(dlib_points_input_layer)
-        dlib_points_layer = MaxPooling2D(pool_size=(2, 2))(dlib_points_layer)
-        dlib_points_layer = Conv2D(256,(3,3),activation = "relu",padding="valid")(dlib_points_layer)
+        dlib_points_layer = Conv2D(32, (1, 3), activation='relu',padding= "valid",kernel_initializer="glorot_normal")(dlib_points_input_layer)
+        dlib_points_layer = MaxPooling2D(pool_size=(1, 2))(dlib_points_layer)
+        dlib_points_layer = Conv2D(64,(1, 3),activation = "relu",padding="valid")(dlib_points_layer)
 
         dlib_points_layer = Flatten()(dlib_points_layer)
 
-        dlib_points_dist_input_layer = Input(shape=(1,68,2))
-        dlib_points_dist_layer = Conv2D(256, (3, 3), activation='relu',padding= "valid",kernel_initializer="glorot_normal")(dlib_points_dist_input_layer)
-        dlib_points_dist_layer = MaxPooling2D(pool_size=(2, 2))(dlib_points_dist_layer)
-        dlib_points_dist_layer = Conv2D(256,(3,3),activation = "relu",padding="valid")(dlib_points_dist_layer)
+        dlib_points_dist_input_layer = Input(shape=(1,68,1))
+        dlib_points_dist_layer = Conv2D(32, (1, 3), activation='relu',padding= "valid",kernel_initializer="glorot_normal")(dlib_points_dist_input_layer)
+        dlib_points_dist_layer = MaxPooling2D(pool_size=(1, 2))(dlib_points_dist_layer)
+        dlib_points_dist_layer = Conv2D(64,(1, 3),activation = "relu",padding="valid")(dlib_points_dist_layer)
 
         dlib_points_dist_layer = Flatten()(dlib_points_dist_layer)
 
-        dlib_points_angle_input_layer = Input(shape=(1,68,2))
-        dlib_points_angle_layer = Conv2D(256, (3, 3), activation='relu',padding= "valid",kernel_initializer="glorot_normal")(dlib_points_angle_input_layer)
-        dlib_points_angle_layer = MaxPooling2D(pool_size=(2, 2))(dlib_points_angle_layer)
-        dlib_points_angle_layer = Conv2D(256,(3,3),activation = "relu",padding="valid")(dlib_points_angle_layer)
+        dlib_points_angle_input_layer = Input(shape=(1,68,1))
+        dlib_points_angle_layer = Conv2D(32, (1, 3), activation='relu',padding= "valid",kernel_initializer="glorot_normal")(dlib_points_angle_input_layer)
+        dlib_points_angle_layer = MaxPooling2D(pool_size=(1, 2))(dlib_points_angle_layer)
+        dlib_points_angle_layer = Conv2D(64,(1, 3),activation = "relu",padding="valid")(dlib_points_angle_layer)
 
         dlib_points_angle_layer = Flatten()(dlib_points_angle_layer)
 
-        merged_layers = keras.layers.concatenate([dlib_points_layer,dlib_points_dist_layer,dlib_points_angle_layer])
+        merged_layers = keras.layers.concatenate([image_layer, dlib_points_layer,dlib_points_dist_layer,dlib_points_angle_layer])
         
         merged_layers = Dense(252, activation='relu')(merged_layers)
         merged_layers = Dropout(0.2)(merged_layers)
@@ -93,9 +98,9 @@ class MultiInputNeuralNet(NeuralNet):
         merged_layers = Dropout(0.2)(merged_layers)
         merged_layers = Dense(self.number_of_class, activation='softmax')(merged_layers)
         
-        self.model = Model(inputs=[dlib_points_input,distance_input,angle_layer_input],outputs=merged_layers)
+        self.model = Model(inputs=[image_input_layer, dlib_points_input_layer,dlib_points_dist_input_layer,dlib_points_angle_input_layer],outputs=merged_layers)
         self.built = True
-        return model
+        return self.model
 
     
 
@@ -116,8 +121,8 @@ class MultiInputNeuralNet(NeuralNet):
         self.preprocessor = self.preprocessor(DATA_SET_DIR)
         self.model.fit_generator(self.preprocessor.flow(),steps_per_epoch=self.steps_per_epoch,
                         epochs=self.epochs,
-                        validation_data=([self.test_images,self.test_dpoints,self.dpointsDists,self.dpointsAngles], self.preprocessor.test_image_emotions))
-        score = self.model.evaluate([self.test_images,self.test_dpoints,self.dpointsDists,self.dpointsAngles], self.preprocessor.test_image_emotions)
+                        validation_data=([self.preprocessor.test_images,self.preprocessor.test_dpoints,self.preprocessor.dpointsDists,self.preprocessor.dpointsAngles], self.preprocessor.test_image_emotions))
+        score = self.model.evaluate([self.preprocessor.test_images,self.preprocessor.test_dpoints,self.preprocessor.dpointsDists,self.preprocessor.dpointsAngles], self.preprocessor.test_image_emotions)
         self.save_model()
         self.logger.log_model(self.models_local_folder, score)
 

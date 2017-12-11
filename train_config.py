@@ -4,4 +4,4 @@ LEARNING_RATE = 1e-4
 PATH2SAVE_MODELS = "models"
 DATA_SET_DIR = "/home/mtk/iCog/projects/emopy/dataset/all"
 LOG_DIR = "logs"
-STEPS_PER_EPOCH = 200
+STEPS_PER_EPOCH = 1000

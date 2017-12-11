@@ -1,4 +1,8 @@
 import numpy as np
+import dlib 
+from config import IMG_SIZE
+
+
 class FeatureExtractor(object):
     """Base class for Feature extactors
     """
