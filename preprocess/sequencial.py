@@ -87,6 +87,6 @@ class SequencialPreprocessor(Preprocessor):
                 X = self.get_sequences_images(sequences_dirs)
                 y = np.zeros((len(sequences_labels),6))
                 for i  in range(len(sequences_labels)):                
-                    y[i] = self.classifier.get_class(sequences_labels[i])
+                    y[i] = np.eye(6)[self.classifier.get_class(sequences_labels[i])]
                 X = X.astype(np.float32)/255;
                 yield X,y

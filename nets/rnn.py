@@ -123,6 +123,7 @@ class LSTMNet(NeuralNet):
         # x_train,x_test,y_train ,y_test = train_test_split(self.X,self.y,test_size=0.3)
         # self.model.fit(x_train,y_train,epochs = EPOCHS, 
         #                 batch_size = BATCH_SIZE,validation_data=(x_test,y_test))
+
         self.model.fit_generator(self.preprocessor.flow(),steps_per_epoch=STEPS_PER_EPOCH,
                         epochs=EPOCHS,
                         validation_data=(self.preprocessor.test_sequences, self.preprocessor.test_sequence_labels))
