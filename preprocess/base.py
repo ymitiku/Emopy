@@ -81,8 +81,6 @@ class Preprocessor(object):
     def __call__(self,path):
         self.load_dataset(path)        
         self.test_images = self.feature_extractor.extract(self.test_images);
-        
-
         self.called = True
         return self
     def generate_indexes(self,random=True):
@@ -138,3 +136,39 @@ class Preprocessor(object):
             rectangles.append(dlib.rectangle(left,top,right,bottom));
             output.append(frame[top:bottom, left:right])
         return output,rectangles
+    def load_sequencial_dataset(self,path,max_sequence_length=71):
+        path = "dataset/ck-sequence"
+        X = []
+        Y = []
+        for em_dir in os.listdir(path):
+            if  em_dir == "contempt":
+                continue
+            for sequence in os.listdir(os.path.join(path,em_dir)):
+                x = np.zeros((max_sequence_length,self.input_shape[0],self.input_shape[1],self.input_shape[2]))
+                currentIndex = 0
+                # y = []
+                for img_file in os.listdir(os.path.join(path,em_dir,sequence)):
+                    img = cv2.imread(os.path.join(path,em_dir,sequence,img_file))
+                    img = self.sanitize(img).reshape(self.input_shape[0],self.input_shape[1],self.input_shape[2])
+                    # x[currentIndex] = img.reshape(img.shape[0]*img.shape[1])
+                    x[currentIndex] = img
+                    # y += [np.eye(7)[self.classifier.get_class(em_dir)]]
+                    currentIndex += 1
+                    if currentIndex ==  max_sequence_length:
+                        break
+                if currentIndex>max_sequence_length:
+                    raise Exception("Sequence with : "+str(currentIndex)+" length found")
+                last_image = x[currentIndex-1]
+                for i in range(currentIndex,max_sequence_length):
+                    x[i] = last_image
+                    # y += [np.eye(7)[self.classifier.get_class(em_dir)]]
+                X+=[x]
+                # Y+=[y]
+                
+                Y+=[np.eye(6)[self.classifier.get_class(em_dir)]]
+            print ("loaded",em_dir ) 
+        print ("sequences",len(X))
+        X = np.array(X)
+        Y = np.array(Y)
+        return X,Y
+            

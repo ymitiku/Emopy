@@ -8,7 +8,9 @@ from preprocess.base import Preprocessor
 from postprocess.base import PostProcessor
 from preprocess.multinput import MultiInputPreprocessor
 from nets.multinput import MultiInputNeuralNet
+from nets.rnn import LSTMNet
 from train_config import NETWORK_TYPE,AUGMENTATION
+from preprocess.sequencial import SequencialPreprocessor
 
 def run():
     if SESSION == 'train':
@@ -24,15 +26,15 @@ def run_train():
     elif NETWORK_TYPE == "si":
         preprocessor = Preprocessor(classifier,input_shape = input_shape,augmentation = AUGMENTATION)
         neuralNet = NeuralNet(input_shape,preprocessor=preprocessor,train=True)
+    elif NETWORK_TYPE =="rnn":
+        preprocessor = SequencialPreprocessor(classifier,input_shape = input_shape,augmentation = AUGMENTATION)("dataset/ck-sequence")
+        neuralNet = LSTMNet(input_shape,preprocessor=preprocessor,train=True)
 
-    
-
-    
     neuralNet.train()
 
 
 def run_test():
-    input_shape = (IMG_SIZE[0],IMG_SIZE[1],1)
+    input_shape = (IMG_SIZE[0],IMG_SIZE[1],1)   
     classifier = SevenEmotionsClassifier()
     preprocessor = Preprocessor(classifier,input_shape = input_shape)
     postProcessor = PostProcessor(classifier)

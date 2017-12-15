@@ -25,7 +25,7 @@ class SevenEmotionsClassifier(Classifier):
         for emotion in self.EMOTIONS:
             if self.EMOTIONS[emotion] == string:
                 return emotion
-        raise Exception("Emotion "+string(string) +" is not recognized")
+        raise Exception("Emotion "+str(string) +" is not recognized")
 
 
 class PositiveNeutralClassifier(Classifier):

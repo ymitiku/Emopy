@@ -1,9 +1,9 @@
-BATCH_SIZE = 32 # Batch sized used for traing.
+BATCH_SIZE = 1 # Batch sized used for traing.
 EPOCHS = 80
 LEARNING_RATE = 1e-4
 PATH2SAVE_MODELS = "models"
 DATA_SET_DIR = "/home/mtk/iCog/projects/emopy/dataset/all"
 LOG_DIR = "logs"
 STEPS_PER_EPOCH = 1000
-NETWORK_TYPE = "mi" # mi for multi input or si for single input
+NETWORK_TYPE = "rnn" # mi for multi input or si for single input
 AUGMENTATION = True
