@@ -32,35 +32,46 @@ class SequencialPreprocessor(Preprocessor):
             output[index] = img
             index +=1
         # pad with last image
-        last_image = output[index-1]
+        last_image = np.array(img,copy=True)
         while index<self.max_sequence_length:
             output[index] = last_image
             index +=1
         return output
     def load_dataset(self,path):
         assert os.path.exists(path),"Specified dataset directory '"+path+"' does not exist "
-        sequences = []
-        sequence_labels = []
-        for emdir in os.listdir(os.path.join(path)):
+        self.train_sequences = []
+        self.train_sequence_labels = []
+        for emdir in os.listdir(os.path.join(path,"train")):
             if emdir == "contempt":
                 continue
-            print("Loading ",os.path.join(path,emdir))
-            for sequence in os.listdir(os.path.join(path,emdir)):
-                sequences += [sequence]
-                sequence_labels +=[emdir]
-        self.train_sequences,test_seq,self.train_sequence_labels ,test_seq_label = train_test_split(sequences,sequence_labels,test_size=0.1)
-        
+            print("Loading ",os.path.join(path,"train",emdir))
+            for sequence in os.listdir(os.path.join(path,"train",emdir)):
+                self.train_sequences += [sequence]
+                self.train_sequence_labels +=[emdir]
         self.train_sequences = np.array(self.train_sequences)
         self.train_sequence_labels = np.array(self.train_sequence_labels)
+        test_seq = []
+        test_seq_label = []
+        for emdir in os.listdir(os.path.join(path,"test")):
+            if emdir == "contempt":
+                continue
+            print("Loading ",os.path.join(path,"test",emdir))
+            for sequence in os.listdir(os.path.join(path,"test",emdir)):
+                test_seq += [sequence]
+                test_seq_label +=[emdir]
+
+        
 
         self.test_sequences = np.zeros((len(test_seq),self.max_sequence_length,self.input_shape[0],self.input_shape[1],self.input_shape[2]))
         num_class=self.classifier.get_num_class()
         self.test_sequence_labels = np.zeros((len(test_seq_label),6))
 
         for i in range(len(test_seq)):
-            self.test_sequences[i] = self.get_sequence_images(os.path.join(path,test_seq_label[i],test_seq[i]))
+            self.test_sequences[i] = self.get_sequence_images(os.path.join(path,"test",test_seq_label[i],test_seq[i]))
             self.test_sequence_labels[i] = np.eye(6)[self.classifier.get_class(test_seq_label[i])]
         self.test_sequences = self.test_sequences.astype(np.float32)/255;
+        self.test_sequences,self.test_sequence_labels = shuffle(self.test_sequences,self.test_sequence_labels)
+
     def __call__(self,path):
         self.load_dataset(path)
         self.called = True
@@ -84,9 +95,17 @@ class SequencialPreprocessor(Preprocessor):
                 sequences_dirs = []
                 y = np.zeros((len(sequences_labels),6))
                 for j in range(len(sequences)):
+<<<<<<< Updated upstream
                     sequences_dirs.append(os.path.join(self.dataset_path,sequences_labels[j],sequences[j]))
                     y[j] = np.eye(6)[self.classifier.get_class(sequences_labels[j])]
                 X = self.get_sequences_images(sequences_dirs)
                            
+=======
+                    sequences_dirs.append(os.path.join(self.dataset_path,"train",sequences_labels[j],sequences[j]))
+                X = self.get_sequences_images(sequences_dirs)
+                y = np.zeros((len(sequences_labels),6))
+                for k  in range(len(sequences_labels)):                
+                    y[k] = np.eye(6)[self.classifier.get_class(sequences_labels[k])]
+>>>>>>> Stashed changes
                 X = X.astype(np.float32)/255;
                 yield X,y

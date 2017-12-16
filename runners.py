@@ -27,7 +27,7 @@ def run_train():
         preprocessor = Preprocessor(classifier,input_shape = input_shape,augmentation = AUGMENTATION)
         neuralNet = NeuralNet(input_shape,preprocessor=preprocessor,train=True)
     elif NETWORK_TYPE =="rnn":
-        preprocessor = SequencialPreprocessor(classifier,input_shape = input_shape,augmentation = AUGMENTATION)("dataset/ck-sequence")
+        preprocessor = SequencialPreprocessor(classifier,input_shape = input_shape,augmentation = AUGMENTATION)("dataset/ck-split")
         neuralNet = LSTMNet(input_shape,preprocessor=preprocessor,train=True)
 
     neuralNet.train()
