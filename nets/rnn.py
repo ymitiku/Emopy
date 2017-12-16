@@ -15,9 +15,10 @@ from sklearn.utils import shuffle
 
 
 class LSTMNet(NeuralNet):
-    def __init__(self,input_shape,convnet_model_path=None,preprocessor = None,logger=None,train=True):
+    def __init__(self,input_shape,convnet_model_path=None,preprocessor = None,logger=None,train=True,postProcessor=None):
         self.convnet_model_path = convnet_model_path;
         self.max_sequence_length = 64
+        self.postProcessor = postProcessor
         NeuralNet.__init__(self,input_shape,preprocessor,logger,train)
         # self.X,self.y = self.preprocessor.load_sequencial_dataset("dataset/ck-sequence",max_sequence_length  = self.max_sequence_length)
         # self.X,self.y = shuffle(self.X,self.y)
@@ -60,6 +61,26 @@ class LSTMNet(NeuralNet):
         model = model_from_json(open("models/rnn/rnn-0.json").read())
         model.load_weights("models/rnn/rnn-0.h5")
         cap = cv2.VideoCapture(-1)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 300)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+        sequences = np.zeros((self.max_sequence_length,self.input_shape[0],self.input_shape[1],self.input_shape[2]) )
+        while cap.isOpened():
+            while len(sequences)<self.max_sequence_length:
+                ret, frame = cap.read()
+                frame = cv2.resize(frame,(300,240))
+                faces,rectangles = self.preprocessor.get_faces(frame,face_detector)
+                face = faces[0]
+                sequences
+            predictions = []
+            for i in range(len(faces)):
+                face = preprocessor.sanitize(faces[i])
+                predictions.append(neuralNet.predict(face))
+
+            self.postProcessor = self.postProcessor(img,rectangles,predictions)
+            cv2.imshow("Image",img)
+            if (cv2.waitKey(10) & 0xFF == ord('q')):
+                break
+        cv2.destroyAllWindows()
     def train(self):
         """Traines the neuralnet model.      
         This method requires the following two directory to exist
@@ -72,10 +93,10 @@ class LSTMNet(NeuralNet):
         self.model.summary()
         print "learning rate",LEARNING_RATE
         
-        # self.model.compile(loss=keras.losses.categorical_crossentropy,
-        #             optimizer=keras.optimizers.Adam(LEARNING_RATE),
-        #             metrics=['accuracy'])
-        self.model.compile(loss='categorical_crossentropy', optimizer='SGD', metrics=['accuracy'])
+        self.model.compile(loss=keras.losses.categorical_crossentropy,
+                    optimizer=keras.optimizers.Adam(LEARNING_RATE),
+                    metrics=['accuracy'])
+        # self.model.compile(loss='categorical_crossentropy', optimizer='SGD', metrics=['accuracy'])
         print self.model.output.shape
         # x_train,x_test,y_train ,y_test = train_test_split(self.X,self.y,test_size=0.3)
         # self.model.fit(x_train,y_train,epochs = EPOCHS, 

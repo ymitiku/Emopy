@@ -1,6 +1,6 @@
 BATCH_SIZE = 1 # Batch sized used for traing.
 EPOCHS = 50
-LEARNING_RATE = 1e-3
+LEARNING_RATE = 1e-5
 PATH2SAVE_MODELS = "models"
 DATA_SET_DIR = "/home/mtk/iCog/projects/emopy/dataset/all"
 LOG_DIR = "logs"
