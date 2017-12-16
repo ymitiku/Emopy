@@ -35,7 +35,8 @@ class LSTMNet(NeuralNet):
         # model.add(TimeDistributed(Dropout(0.2)))
         model.add(TimeDistributed(MaxPooling2D(pool_size=(2,2))))
         model.add(TimeDistributed(Flatten()))
-        model.add(Bidirectional(LSTM(128,return_sequences=False,stateful=False,activation="relu",recurrent_dropout=0.2)))
+        # model.add(Bidirectional(LSTM(128,return_sequences=False,stateful=False,activation="relu",recurrent_dropout=0.2)))
+        model.add(LSTM(64,return_sequences=False,stateful=False,activation="relu",recurrent_dropout=0.2))
         # model.add(Dropout(0.2))
         # model.add(Dense(128,activation="relu"))
         # model.add(Dropout(0.2))
@@ -55,6 +56,10 @@ class LSTMNet(NeuralNet):
         face = face.reshape(-1,self.max_sequence_length,48,48,1)
         emotions = self.model.predict(face)[0]
         return emotions
+    def process_web_cam(self):
+        model = model_from_json(open("models/rnn/rnn-0.json").read())
+        model.load_weights("models/rnn/rnn-0.h5")
+        cap = cv2.VideoCapture(-1)
     def train(self):
         """Traines the neuralnet model.      
         This method requires the following two directory to exist
@@ -67,9 +72,10 @@ class LSTMNet(NeuralNet):
         self.model.summary()
         print "learning rate",LEARNING_RATE
         
-        self.model.compile(loss=keras.losses.categorical_crossentropy,
-                    optimizer=keras.optimizers.Adam(LEARNING_RATE),
-                    metrics=['accuracy'])
+        # self.model.compile(loss=keras.losses.categorical_crossentropy,
+        #             optimizer=keras.optimizers.Adam(LEARNING_RATE),
+        #             metrics=['accuracy'])
+        self.model.compile(loss='categorical_crossentropy', optimizer='SGD', metrics=['accuracy'])
         print self.model.output.shape
         # x_train,x_test,y_train ,y_test = train_test_split(self.X,self.y,test_size=0.3)
         # self.model.fit(x_train,y_train,epochs = EPOCHS, 

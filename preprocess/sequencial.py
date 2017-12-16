@@ -82,11 +82,11 @@ class SequencialPreprocessor(Preprocessor):
                 sequences = self.train_sequences[currentIndexes]
                 sequences_labels = self.train_sequence_labels[currentIndexes]
                 sequences_dirs = []
+                y = np.zeros((len(sequences_labels),6))
                 for j in range(len(sequences)):
                     sequences_dirs.append(os.path.join(self.dataset_path,sequences_labels[j],sequences[j]))
+                    y[j] = np.eye(6)[self.classifier.get_class(sequences_labels[j])]
                 X = self.get_sequences_images(sequences_dirs)
-                y = np.zeros((len(sequences_labels),6))
-                for i  in range(len(sequences_labels)):                
-                    y[i] = np.eye(6)[self.classifier.get_class(sequences_labels[i])]
+                           
                 X = X.astype(np.float32)/255;
                 yield X,y
