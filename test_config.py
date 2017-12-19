@@ -1,4 +1,4 @@
-MODEL_PATH = "models/nn/nn-1" # model name used for testing
+MODEL_PATH = "models/nn/nn-9" # model name used for testing
 TEST_IMAGE = '/home/mtk/iCog/projects/emopy/test-images/ang2.jpg'
 TEST_VIDEO = "/home/mtk/iCog/projects/emopy/test-videos/75Emotions.mp4"
 """Test type either image,video or webcam
@@ -6,4 +6,4 @@ TEST_VIDEO = "/home/mtk/iCog/projects/emopy/test-videos/75Emotions.mp4"
 [description]
 """
 
-TEST_TYPE = 'image' 
+TEST_TYPE = 'webcam' 

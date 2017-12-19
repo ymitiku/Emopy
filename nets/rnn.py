@@ -12,27 +12,35 @@ from keras.layers import multiply,merge,Conv1D,MaxPooling1D,MaxPooling2D,Flatten
 from keras import backend as K
 from keras.layers.embeddings import Embedding
 from sklearn.utils import shuffle
+from train_config import LOG_DIR
+from loggers.base import EmopyLogger
 
 
 class LSTMNet(NeuralNet):
     def __init__(self,input_shape,convnet_model_path=None,preprocessor = None,logger=None,train=True):
         self.convnet_model_path = convnet_model_path;
-        self.max_sequence_length = 64
+        self.max_sequence_length = 6
         NeuralNet.__init__(self,input_shape,preprocessor,logger,train)
         self.models_local_folder = "rnn"
         self.logs_local_folder = self.models_local_folder
+        if not os.path.exists(os.path.join(LOG_DIR,self.logs_local_folder)):
+            os.makedirs(os.path.join(LOG_DIR,self.logs_local_folder))
+        if logger is None:
+            self.logger = EmopyLogger([os.path.join(LOG_DIR,self.logs_local_folder,self.logs_local_folder+".txt")])
+        else:
+            self.logger = logger
         self.model = self.build()
     def build(self):
        
 
         model = Sequential()
 
-        model.add(TimeDistributed(Conv2D(8, (3, 3), padding='valid', activation='relu'),input_shape=(self.max_sequence_length, 48, 48, 1)))
-        model.add(TimeDistributed(Conv2D(16, (3, 3), padding='valid', activation='relu')))
-        model.add(TimeDistributed(Dropout(0.2)))
+        model.add(TimeDistributed(Conv2D(32, (3, 3), padding='valid', activation='relu'),input_shape=(self.max_sequence_length, 48, 48, 1)))
+        model.add(TimeDistributed(Conv2D(64, (3, 3), padding='valid', activation='relu')))
+        # model.add(TimeDistributed(Dropout(0.5)))
         model.add(TimeDistributed(MaxPooling2D(pool_size=(2,2))))
         model.add(TimeDistributed(Flatten()))
-        model.add(LSTM(16,return_sequences=False,stateful=False,rnn_droupout=0.4))
+        model.add(LSTM(128,return_sequences=False,stateful=False,dropout=0.4))
         model.add(Dense(6,activation="softmax"))
         
         return model;

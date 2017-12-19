@@ -31,11 +31,12 @@ class Preprocessor(object):
         if augmentation:
             self.datagenerator = ImageDataGenerator(
                 rotation_range = 40,
-                width_shift_range = 0.1,
-                height_shift_range = 0.1,
-                shear_range = 0.1,
-                zoom_range = 0.1,
+                width_shift_range = 0.2,
+                height_shift_range = 0.2,
+                shear_range = 0.2,
+                zoom_range = 0.2,
                 horizontal_flip=True,
+                data_format="channels_last"
                  
             )
         self.feature_extractor = ImageFeatureExtractor()
@@ -105,22 +106,46 @@ class Preprocessor(object):
     def sanitize(self,image):
         if image is None:
             raise "Unable to sanitize None image"
-        if len(image.shape)>2:
+        if len(image.shape)>2 and self.input_shape[2]==1:
             image = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
-        image = cv2.resize(image,(self.input_shape[0],self.input_shape[1]))
+        dim = (self.input_shape[0],self.input_shape[1])
+        image = cv2.resize(image,dim, interpolation = cv2.INTER_AREA)
         return image
     
     
     def get_images(self,paths,augmentation = False):
-        output = np.zeros(shape=(len(paths),self.input_shape[0],self.input_shape[1]),dtype=np.uint8)
+        output = np.zeros(shape=(len(paths),self.input_shape[0],self.input_shape[1],self.input_shape[2]),dtype=np.uint8)
         for i in range(len(paths)):
-            img = cv2.imread(paths[i])
+            img = cv2.imread(paths[i],cv2.IMREAD_COLOR)
             img = self.sanitize(img)
+            img = img.reshape(self.input_shape)
             if(augmentation):
-                img_shape = img.shape
-                img = img.reshape((-1,img_shape[0],img_shape[1]))
-                img = self.datagenerator.random_transform(img)
-                img = img.reshape((img_shape[0],img_shape[1]))
+                # print ("augmentation")
+                if (self.input_shape[2]==3):
+                    img_shape = img.shape
+                    r = img[:,:,0]
+                    g = img[:,:,1]
+                    b = img[:,:,2]
+                    r = r.reshape(-1,img_shape[0],img_shape[1])
+                    g = g.reshape(-1,img_shape[0],img_shape[1])
+                    b = b.reshape(-1,img_shape[0],img_shape[1])
+
+                    r = self.datagenerator.random_transform(r)
+                    g = self.datagenerator.random_transform(g)
+                    b = self.datagenerator.random_transform(b)
+
+                    r = r.reshape(-1,img_shape[0],img_shape[1],1)
+                    g = g.reshape(-1,img_shape[0],img_shape[1],1)
+                    b = b.reshape(-1,img_shape[0],img_shape[1],1)
+                    img = np.concatenate((r, g, b),axis=-1)
+                elif self.input_shape[2]==1:
+                    img_shape = img.shape
+                    img = img.reshape(self.input_shape[0],self.input_shape[1])
+                    img = self.datagenerator.random_transform(img)
+                    img = img.reshape(img_shape)
+                else:
+                    raise Exception("Image should be either gray or rgb. Image shape is:",img.shape)
+                
             output[i] = img
         return output
     

@@ -35,7 +35,7 @@ class MultiInputNeuralNet(NeuralNet):
         if not os.path.exists(os.path.join(LOG_DIR,self.logs_local_folder)):
             os.makedirs(os.path.join(LOG_DIR,self.logs_local_folder))
         if logger is None:
-            self.logger = EmopyLogger([os.path.join(LOG_DIR,self.logs_local_folder,"nn.txt")])
+            self.logger = EmopyLogger([os.path.join(LOG_DIR,self.logs_local_folder,self.logs_local_folder+".txt")])
         else:
             self.logger = logger
         self.feature_extractors = ["image"]
