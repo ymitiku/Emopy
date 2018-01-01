@@ -30,10 +30,10 @@ class Preprocessor(object):
         self.augmentation = augmentation
         if augmentation:
             self.datagenerator = ImageDataGenerator(
-                rotation_range = 40,
+                rotation_range = 20,
                 width_shift_range = 0.2,
                 height_shift_range = 0.2,
-                shear_range = 0.2,
+                # shear_range = 0.2,
                 zoom_range = 0.2,
                 horizontal_flip=True,
                 data_format="channels_last"
@@ -109,7 +109,7 @@ class Preprocessor(object):
         if len(image.shape)>2 and self.input_shape[2]==1:
             image = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
         dim = (self.input_shape[0],self.input_shape[1])
-        image = cv2.resize(image,dim, interpolation = cv2.INTER_AREA)
+        image = cv2.resize(image,dim, interpolation = cv2.INTER_AREA).astype(np.float32)
         return image
     
     
@@ -140,7 +140,9 @@ class Preprocessor(object):
                     img = np.concatenate((r, g, b),axis=-1)
                 elif self.input_shape[2]==1:
                     img_shape = img.shape
-                    img = img.reshape(self.input_shape[0],self.input_shape[1])
+                    # print (img.shape,self.input_shape)
+                    # img = img.reshape(self.input_shape[0],self.input_shape[1])
+                    # print("Imageshape",img.shape)
                     img = self.datagenerator.random_transform(img)
                     img = img.reshape(img_shape)
                 else:

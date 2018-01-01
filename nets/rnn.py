@@ -19,7 +19,7 @@ from loggers.base import EmopyLogger
 class LSTMNet(NeuralNet):
     def __init__(self,input_shape,convnet_model_path=None,preprocessor = None,logger=None,train=True):
         self.convnet_model_path = convnet_model_path;
-        self.max_sequence_length = 6
+        self.max_sequence_length = 71
         NeuralNet.__init__(self,input_shape,preprocessor,logger,train)
         self.models_local_folder = "rnn"
         self.logs_local_folder = self.models_local_folder
@@ -27,6 +27,7 @@ class LSTMNet(NeuralNet):
             os.makedirs(os.path.join(LOG_DIR,self.logs_local_folder))
         if logger is None:
             self.logger = EmopyLogger([os.path.join(LOG_DIR,self.logs_local_folder,self.logs_local_folder+".txt")])
+            print("Logging to file",os.path.join(LOG_DIR,self.logs_local_folder,self.logs_local_folder+".txt"))
         else:
             self.logger = logger
         self.model = self.build()
@@ -68,7 +69,6 @@ class LSTMNet(NeuralNet):
                     optimizer=keras.optimizers.Adam(LEARNING_RATE),
                     metrics=['accuracy'])
         print self.model.output.shape
-
         self.model.fit_generator(self.preprocessor.flow(),steps_per_epoch=STEPS_PER_EPOCH,
                         epochs=EPOCHS,
                         validation_data=(self.preprocessor.test_sequences, self.preprocessor.test_sequence_labels))
@@ -81,4 +81,35 @@ class LSTMNet(NeuralNet):
         face = face.reshape(-1,self.max_sequence_length,48,48,1)
         emotions = self.model.predict(face)[0]
         return emotions
-    
+
+
+class DlibLSTMNet(LSTMNet):
+    def __init__(self,input_shape,convnet_model_path=None,preprocessor = None,logger=None,train=True):
+        LSTMNet.__init__(self,input_shape,convnet_model_path,preprocessor,logger,train)
+       
+        self.models_local_folder = "drnn"
+        self.logs_local_folder = self.models_local_folder
+        if not os.path.exists(os.path.join(LOG_DIR,self.logs_local_folder)):
+            os.makedirs(os.path.join(LOG_DIR,self.logs_local_folder))
+        if logger is None:
+            self.logger = EmopyLogger([os.path.join(LOG_DIR,self.logs_local_folder,self.logs_local_folder+".txt")])
+            print("Logging to file",os.path.join(LOG_DIR,self.logs_local_folder,self.logs_local_folder+".txt"))
+        else:
+            self.logger = logger
+        self.model = self.build()
+        
+    def build(self):
+        model = Sequential()
+
+        model.add(TimeDistributed(Conv2D(32, (3, 1), padding='valid', activation='relu'),input_shape=(self.max_sequence_length, 68, 2, 1)))
+        model.add(TimeDistributed(Conv2D(64, (3, 1), padding='valid', activation='relu')))
+        # model.add(TimeDistributed(Dropout(0.5)))
+        # model.add(TimeDistributed(MaxPooling2D(pool_size=(2,2))))
+        model.add(TimeDistributed(Flatten()))
+        # model.add(Bidirectional(LSTM(16,return_sequences=True,stateful=False)))
+        model.add(LSTM(32,return_sequences=False,stateful=False))
+        model.add(Dense(6,activation="softmax"))
+        
+        return model;
+    def predict(self,dlib_features):
+        pass

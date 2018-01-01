@@ -193,3 +193,94 @@ _______________________________________
 Loss          : 1.0866832444
 Accuracy      : 0.585106382852
 **************************************
+**************************************
+Trained model vgg-0.json
+Wednesday December 20,2017 12:41PM
+Dataset dir: /home/mtk/iCog/projects/emopy/dataset/all
+Parameters
+_______________________________________
+Batch-Size    : 32
+Epoches       : 100
+Learning rate : 0.0001
+_______________________________________
+Loss          : 1.4144151323253682
+Accuracy      : 0.5403939708205765
+**************************************
+**************************************
+Trained model nn-10.json
+Thursday December 28,2017 05:36PM
+Dataset dir: /home/mtk/iCog/projects/emopy/dataset/ck
+Parameters
+_______________________________________
+Batch-Size    : 32
+Epoches       : 50
+Learning rate : 0.0001
+_______________________________________
+Loss          : 1.2982231647410292
+Accuracy      : 0.5829787244188025
+**************************************
+**************************************
+Trained model nn-11.json
+Friday December 29,2017 12:42AM
+Dataset dir: /home/mtk/iCog/projects/emopy/dataset/ck
+Parameters
+_______________________________________
+Batch-Size    : 32
+Epoches       : 80
+Learning rate : 1e-05
+_______________________________________
+Loss          : 0.349559041413855
+Accuracy      : 0.8808510648443344
+**************************************
+**************************************
+Trained model nn-12.json
+Friday December 29,2017 11:06AM
+Dataset dir: /home/mtk/iCog/projects/emopy/dataset/ck
+Parameters
+_______________________________________
+Batch-Size    : 32
+Epoches       : 25
+Learning rate : 0.001
+_______________________________________
+Loss          : 0.05826612449794645
+Accuracy      : 0.985106382217813
+**************************************
+**************************************
+Trained model nn-13.json
+Friday December 29,2017 02:39PM
+Dataset dir: /home/mtk/iCog/projects/emopy/dataset/all
+Parameters
+_______________________________________
+Batch-Size    : 32
+Epoches       : 50
+Learning rate : 0.0001
+_______________________________________
+Loss          : 0.9357190762555659
+Accuracy      : 0.6522848712113573
+**************************************
+**************************************
+Trained model nn-14.json
+Saturday December 30,2017 02:25AM
+Dataset dir: /home/mtk/iCog/projects/emopy/dataset/all
+Parameters
+_______________________________________
+Batch-Size    : 32
+Epoches       : 100
+Learning rate : 0.0001
+_______________________________________
+Loss          : 0.9209649503131224
+Accuracy      : 0.6760507217433922
+**************************************
+**************************************
+Trained model nn-15.json
+Sunday December 31,2017 06:04AM
+Dataset dir: /home/mtk/iCog/projects/emopy/dataset/all
+Parameters
+_______________________________________
+Batch-Size    : 32
+Epoches       : 100
+Learning rate : 0.0001
+_______________________________________
+Loss          : 1.0008392310596956
+Accuracy      : 0.6359358800162025
+**************************************
