@@ -26,16 +26,20 @@ class SequencialPreprocessor(Preprocessor):
         output = np.zeros((self.max_sequence_length,self.input_shape[0],self.input_shape[1],self.input_shape[2]))
         index = 0
         files.sort()
-        while index<len(files) and index<self.max_sequence_length:
-            img = cv2.imread(os.path.join(sequence_dir,files[index]))
+        steps =float(len(files))/self.max_sequence_length
+        currentOutputIndex = 0
+        while int(index)<len(files) and currentOutputIndex<self.max_sequence_length:
+            img = cv2.imread(os.path.join(sequence_dir,files[int(index)]))
             img = self.sanitize(img).reshape(self.input_shape)
-            output[index] = img
-            index +=1
+            output[currentOutputIndex] = img
+            index +=steps
+            currentOutputIndex +=1
         # pad with last image
+        currentOutputIndex = int(currentOutputIndex)
         last_image = np.array(img,copy=True)
-        while index<self.max_sequence_length:
-            output[index] = last_image
-            index +=1
+        while currentOutputIndex<self.max_sequence_length:
+            output[currentOutputIndex] = last_image
+            currentOutputIndex +=1
         return output
     def load_dataset(self,path):
         assert os.path.exists(path),"Specified dataset directory '"+path+"' does not exist "
@@ -102,3 +106,4 @@ class SequencialPreprocessor(Preprocessor):
                     y[k] = np.eye(6)[self.classifier.get_class(sequences_labels[k])]
                 X = X.astype(np.float32)/255;
                 yield X,y
+
