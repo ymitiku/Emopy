@@ -58,17 +58,17 @@ class NeuralNet(object):
         """
         model = Sequential()
         model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', padding= "same", input_shape=self.input_shape,kernel_initializer="glorot_normal"))
-        model.add(Dropout(0.2))
+        # model.add(Dropout(0.2))
         model.add(Conv2D(64, (3, 3), activation='relu',padding= "same",kernel_initializer="glorot_normal"))
         # model.add(Dropout(0.2))
-        model.add(MaxPooling2D(pool_size=(2, 2)))
+        # model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Conv2D(64, (3, 3), activation='relu',padding= "same",kernel_initializer="glorot_normal"))
         # model.add(Dropout(0.2))
-        model.add(MaxPooling2D(pool_size=(2, 2)))
+        # model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Conv2D(128, (3, 3), activation='relu',padding= "same",kernel_initializer="glorot_normal"))
         # model.add(Dropout(0.2))
-        model.add(MaxPooling2D(pool_size=(2, 2)))
-        model.add(Conv2D(252, (3, 3), activation='relu',padding= "same",kernel_initializer="glorot_normal"))
+        # model.add(MaxPooling2D(pool_size=(2, 2)))
+        # model.add(Conv2D(252, (3, 3), activation='relu',padding= "same",kernel_initializer="glorot_normal"))
         # model.add(Dropout(0.2))
         model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Flatten())
@@ -133,7 +133,8 @@ class NeuralNet(object):
         self.logger.log_model(self.models_local_folder, score)
 
     def predict(self,face):
-        assert face.shape == IMG_SIZE, "Face image size should be "+str(IMG_SIZE)
+        print face.shape
+        # assert face.shape == IMG_SIZE, "Face image size should be "+str(IMG_SIZE)
         face = face.reshape(-1,48,48,1)
         emotions = self.model.predict(face)[0]
         return emotions
