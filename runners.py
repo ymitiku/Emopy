@@ -8,9 +8,15 @@ from preprocess.base import Preprocessor
 from postprocess.base import PostProcessor
 from preprocess.multinput import MultiInputPreprocessor
 from nets.multinput import MultiInputNeuralNet
-from nets.rnn import LSTMNet
+from nets.rnn import LSTMNet,DlibLSTMNet
 from train_config import NETWORK_TYPE,AUGMENTATION
-from preprocess.sequencial import SequencialPreprocessor
+from preprocess.sequencial import SequencialPreprocessor,DlibSequencialPreprocessor
+from multiprocessing.queues import Queue
+from threading import Thread
+import numpy as np
+from preprocess.dlib_input import DlibInputPreprocessor
+from nets.dlib_inputs import DlibPointsInputNeuralNet
+maxSequenceLength = 10
 
 def run():
     if SESSION == 'train':
@@ -29,9 +35,31 @@ def run_train():
     elif NETWORK_TYPE =="rnn":
         preprocessor = SequencialPreprocessor(classifier,input_shape = input_shape,augmentation = AUGMENTATION)("dataset/ck-split")
         neuralNet = LSTMNet(input_shape,preprocessor=preprocessor,train=True)
+    elif NETWORK_TYPE =="drnn":
+        preprocessor = DlibSequencialPreprocessor(classifier,input_shape = input_shape,augmentation = AUGMENTATION)("dataset/ck-split")
+        neuralNet = DlibLSTMNet(input_shape,preprocessor=preprocessor,train=True)
+    elif NETWORK_TYPE =="dinn":
+        preprocessor = DlibInputPreprocessor(classifier,input_shape = input_shape,augmentation = AUGMENTATION)
+        neuralNet = DlibPointsInputNeuralNet(input_shape,preprocessor=preprocessor,train=True)
 
     neuralNet.train()
 
+
+def arg_max(array):
+        max_value = array[0]
+        index = 0
+        for i,el in enumerate(array):
+            if el > max_value:
+                index = i
+                max_value = el
+        return index
+
+
+
+def draw_landmarks(frame,landmarks):
+    for i in range(len(landmarks)):
+        landmark = landmarks[i]
+        cv2.circle(frame,(int(landmark[0]),int(landmark[1])),1,color=(255,0,0),thickness=1)
 
 def run_test():
     input_shape = (IMG_SIZE[0],IMG_SIZE[1],1)   
@@ -57,7 +85,55 @@ def run_test():
     elif TEST_TYPE =="video":
         pass
     elif TEST_TYPE == "webcam":
-        pass
+        if NETWORK_TYPE == "drnn":
+            # cap = cv2.VideoCapture("/home/mtk/iCog/projects/emopy/test-videos/75Emotions.mp4")
+            cap = cv2.VideoCapture(-1)
+            preprocessor = DlibSequencialPreprocessor(classifier,input_shape = input_shape)
+            neuralNet = DlibLSTMNet(input_shape,preprocessor = preprocessor,train = False)
+            face_detector = dlib.get_frontal_face_detector()
+            postProcessor = PostProcessor(classifier)
+            # if cap.isOpened():
+            #     recognitionThread = Thread(target=start_recognition_task,args=(preprocessor,neuralNet))
+            #     recognitionThread.start()
+            print "opening camera"
+
+            
+            current_sequence = np.zeros((maxSequenceLength,68,2,1))
+            currentIndex = 0
 
 
-    
+            
+            currentEmotion = ""
+            while cap.isOpened():
+                ret,frame = cap.read()
+                currentWidth = frame.shape[1]
+                width = 600
+                ratio = currentWidth/float(width)
+                height = frame.shape[0]/float(ratio)
+                frame = cv2.resize(frame,(width,int(height)))
+                faces,rectangles = preprocessor.get_faces(frame,face_detector)
+                if(len(faces)>0):
+                    face,rectangle = faces[0],rectangles[0]
+                    face = preprocessor.sanitize(face)
+                    dlib_points = preprocessor.get_face_dlib_points(face)
+                    # draw_landmarks(face,dlib_points)
+                    # cv2.imshow("Face",face)
+                    current_sequence[currentIndex:currentIndex+2] = [np.array(np.expand_dims(dlib_points,2)),np.expand_dims(dlib_points,2)]
+                    currentIndex+=2
+                    # sequencialQueue.put(face)
+                    postProcessor.overlay(frame, [rectangle], [currentEmotion])
+                else:
+                    current_sequence = np.zeros((maxSequenceLength,68,2,1))
+                    currentIndex = 0
+                if currentIndex > maxSequenceLength-2:
+                    current_sequence= current_sequence.astype(np.float32)/IMG_SIZE[0]
+                    predictions = neuralNet.predict(np.expand_dims(current_sequence,0))[0]
+                    print predictions
+                    emotion = arg_max(predictions)
+                    currentEmotion = preprocessor.classifier.get_string(emotion)
+                    current_sequence = np.zeros((maxSequenceLength,68,2,1))
+                    currentIndex = 0
+                cv2.imshow("Webcam",frame)
+                if (cv2.waitKey(10) & 0xFF == ord('q')):
+                    break
+            cv2.destroyAllWindows()

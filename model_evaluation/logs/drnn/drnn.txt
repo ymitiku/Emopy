@@ -1,0 +1,104 @@
+**************************************
+Trained model drnn-0.json
+Monday January 01,2018 08:10PM
+Dataset dir: /home/mtk/iCog/projects/emopy/dataset/all
+Parameters
+_______________________________________
+Batch-Size    : 1
+Epoches       : 50
+Learning rate : 0.0001
+_______________________________________
+Loss          : 2.954631915168157
+Accuracy      : 0.23809523478386893
+**************************************
+**************************************
+Trained model drnn-1.json
+Tuesday January 02,2018 12:01PM
+Dataset dir: /home/mtk/iCog/projects/emopy/dataset/all
+Parameters
+_______________________________________
+Batch-Size    : 1
+Epoches       : 50
+Learning rate : 0.001
+_______________________________________
+Loss          : 0.2105882219851963
+Accuracy      : 0.920634907389444
+**************************************
+**************************************
+Trained model drnn-2.json
+Tuesday January 02,2018 03:19PM
+Dataset dir: /home/mtk/iCog/projects/emopy/dataset/all
+Parameters
+_______________________________________
+Batch-Size    : 1
+Epoches       : 50
+Learning rate : 0.0001
+_______________________________________
+Loss          : 0.3465844312357524
+Accuracy      : 0.8888888917272053
+**************************************
+**************************************
+Trained model drnn-3.json
+Tuesday January 02,2018 03:27PM
+Dataset dir: /home/mtk/iCog/projects/emopy/dataset/all
+Parameters
+_______________________________________
+Batch-Size    : 1
+Epoches       : 10
+Learning rate : 1e-06
+_______________________________________
+Loss          : 0.3269732840477474
+Accuracy      : 0.8412698431620522
+**************************************
+**************************************
+Trained model drnn-4.json
+Tuesday January 02,2018 03:35PM
+Dataset dir: /home/mtk/iCog/projects/emopy/dataset/all
+Parameters
+_______________________________________
+Batch-Size    : 1
+Epoches       : 10
+Learning rate : 0.0001
+_______________________________________
+Loss          : 0.282562545604176
+Accuracy      : 0.8888888907810998
+**************************************
+**************************************
+Trained model drnn-5.json
+Tuesday January 02,2018 03:42PM
+Dataset dir: /home/mtk/iCog/projects/emopy/dataset/all
+Parameters
+_______________________________________
+Batch-Size    : 1
+Epoches       : 10
+Learning rate : 1e-05
+_______________________________________
+Loss          : 0.2818857067161136
+Accuracy      : 0.9047619057080102
+**************************************
+**************************************
+Trained model drnn-6.json
+Tuesday January 02,2018 04:25PM
+Dataset dir: /home/mtk/iCog/projects/emopy/dataset/all
+Parameters
+_______________________________________
+Batch-Size    : 1
+Epoches       : 50
+Learning rate : 0.0001
+_______________________________________
+Loss          : 0.6896248507121253
+Accuracy      : 0.7301587188054645
+**************************************
+**************************************
+Trained model drnn-7.json
+Tuesday January 02,2018 04:40PM
+Dataset dir: /home/mtk/iCog/projects/emopy/dataset/all
+Parameters
+_______________________________________
+Batch-Size    : 1
+Epoches       : 10
+Learning rate : 0.0001
+_______________________________________
+Loss          : 0.30461230117177207
+Accuracy      : 0.857142859035068
+**************************************

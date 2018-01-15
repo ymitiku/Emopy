@@ -6,4 +6,4 @@ TEST_VIDEO = "/home/mtk/iCog/projects/emopy/test-videos/75Emotions.mp4"
 [description]
 """
 
-TEST_TYPE = 'image' 
+TEST_TYPE = 'webcam' 

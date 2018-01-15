@@ -1,0 +1,35 @@
+[1mdiff --git a/preprocess/sequencial.py b/preprocess/sequencial.py[m
+[1mindex 2be5c45..6abd23a 100644[m
+[1m--- a/preprocess/sequencial.py[m
+[1m+++ b/preprocess/sequencial.py[m
+[36m@@ -101,4 +101,27 @@[m [mclass SequencialPreprocessor(Preprocessor):[m
+                 for k  in range(len(sequences_labels)):                [m
+                     y[k] = np.eye(6)[self.classifier.get_class(sequences_labels[k])][m
+                 X = X.astype(np.float32)/255;[m
+[31m-                yield X,y[m
+\ No newline at end of file[m
+[32m+[m[32m                yield X,y[m
+[32m+[m
+[32m+[m
+[32m+[m[32mclass DlibSequencialPreprocessor(SequencialPreprocessor):[m
+[32m+[m[32m    def __init__(self,classifier, input_shape = None,batch_size=BATCH_SIZE,augmentation = False,verbose = True,max_sequence_length=71,predictor_path = "shape_predictor_68_face_landmarks.dat"):[m
+[32m+[m[32m        SequencialPreprocessor.__init__(self,classifier,input_shape,batch_size,augmentation,verbose,max_sequence_length)[m
+[32m+[m[32m        self.detector = dlib.get_frontal_face_detector()[m
+[32m+[m[32m        self.predictor = dlib.shape_predictor(predictor_path)[m
+[32m+[m[32m    def get_face_dlib_points(self,image):[m
+[32m+[m[32m        face = dlib.rectangle(0,0,image.shape[1]-1,image.shape[0]-1)[m
+[32m+[m[32m        img = image.reshape(IMG_SIZE[0],IMG_SIZE[1])[m
+[32m+[m[32m        shapes = self.predictor(img,face)[m
+[32m+[m[32m        parts = shapes.parts()[m
+[32m+[m[32m        output = np.zeros((68,2))[m
+[32m+[m[32m        for i,point in enumerate(parts):[m
+[32m+[m[32m            output[i]=[point.x,point.y][m
+[32m+[m[41m        [m
+[32m+[m[32m        return output[m
+[32m+[m[32m    def get_dlib_points(self,images):[m
+[32m+[m[32m        output = np.zeros((len(images),68,2))[m
+[32m+[m[32m        for i in range(len(images)):[m
+[32m+[m[32m            output[i] = self.get_face_dlib_points(images[i])[m
+[32m+[m[32m        output = np.expand_dims(output,axis=3)[m
+[32m+[m[32m        return output[m
+\ No newline at end of file[m

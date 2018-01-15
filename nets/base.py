@@ -40,7 +40,8 @@ class NeuralNet(object):
         self.feature_extractors = ["image"]
         self.number_of_class = self.preprocessor.classifier.get_num_class()
         if train:
-            self.model = self.build()
+            # self.model = self.build()
+            self.model = self.load_model("models/nn/nn-16")
         else:
             self.model = self.load_model(MODEL_PATH)
         self.epochs = EPOCHS
