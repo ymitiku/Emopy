@@ -60,31 +60,31 @@ class DlibPointsInputNeuralNet(NeuralNet):
 
         dlib_points_input_layer = Input(shape=(1,68,2))
         dlib_points_layer = Conv2D(32, (1, 3), activation='relu',padding= "same",kernel_initializer="glorot_normal")(dlib_points_input_layer)
-        # dlib_points_layer = Conv2D(64,(1, 3),activation = "relu",padding="same",kernel_initializer="glorot_normal")(dlib_points_layer)
+        dlib_points_layer = Conv2D(64,(1, 3),activation = "relu",padding="same",kernel_initializer="glorot_normal")(dlib_points_layer)
         # dlib_points_layer = Conv2D(128,(1, 3),activation = "relu",padding="same",kernel_initializer="glorot_normal")(dlib_points_layer)
 
         dlib_points_layer = Flatten()(dlib_points_layer)
 
         dlib_points_dist_input_layer = Input(shape=(1,68,1))
         dlib_points_dist_layer = Conv2D(32, (1, 3), activation='relu',padding= "same",kernel_initializer="glorot_normal")(dlib_points_dist_input_layer)
-        # dlib_points_dist_layer = Conv2D(64,(1, 3),activation = "relu",padding="same",kernel_initializer='glorot_normal')(dlib_points_dist_layer)
+        dlib_points_dist_layer = Conv2D(64,(1, 3),activation = "relu",padding="same",kernel_initializer='glorot_normal')(dlib_points_dist_layer)
         # dlib_points_dist_layer = Conv2D(128,(1, 3),activation = "relu",padding="same",kernel_initializer='glorot_normal')(dlib_points_dist_layer)
 
         dlib_points_dist_layer = Flatten()(dlib_points_dist_layer)
 
         dlib_points_angle_input_layer = Input(shape=(1,68,1))
         dlib_points_angle_layer = Conv2D(32, (1, 3), activation='relu',padding= "same",kernel_initializer="glorot_normal")(dlib_points_angle_input_layer)
-        # dlib_points_angle_layer = Conv2D(64,(1, 3),activation = "relu",padding="same",kernel_initializer='glorot_normal')(dlib_points_angle_layer)
+        dlib_points_angle_layer = Conv2D(64,(1, 3),activation = "relu",padding="same",kernel_initializer='glorot_normal')(dlib_points_angle_layer)
         # dlib_points_angle_layer = Conv2D(18,(1, 3),activation = "relu",padding="same",kernel_initializer='glorot_normal')(dlib_points_angle_layer)
 
         dlib_points_angle_layer = Flatten()(dlib_points_angle_layer)
 
         merged_layers = keras.layers.concatenate([dlib_points_layer,dlib_points_dist_layer,dlib_points_angle_layer])
         
-        merged_layers = Dense(252, activation='relu')(merged_layers)
+        merged_layers = Dense(128, activation='relu')(merged_layers)
         # merged_layers = Dropout(0.2)(merged_layers)
         merged_layers = Dense(1024, activation='relu')(merged_layers)
-        # merged_layers = Dropout(0.2)(merged_layers)
+        merged_layers = Dropout(0.2)(merged_layers)
         merged_layers = Dense(self.number_of_class, activation='softmax')(merged_layers)
         
         self.model = Model(inputs=[ dlib_points_input_layer,dlib_points_dist_input_layer,dlib_points_angle_input_layer],outputs=merged_layers)

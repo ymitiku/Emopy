@@ -17,6 +17,7 @@ import numpy as np
 from preprocess.dlib_input import DlibInputPreprocessor
 from nets.dlib_inputs import DlibPointsInputNeuralNet
 maxSequenceLength = 10
+from test_config import MODEL_PATH
 
 def run():
     if SESSION == 'train':
@@ -133,6 +134,39 @@ def run_test():
                     currentEmotion = preprocessor.classifier.get_string(emotion)
                     current_sequence = np.zeros((maxSequenceLength,68,2,1))
                     currentIndex = 0
+                cv2.imshow("Webcam",frame)
+                if (cv2.waitKey(10) & 0xFF == ord('q')):
+                    break
+            cv2.destroyAllWindows()
+        else:
+            input_shape = (IMG_SIZE[0],IMG_SIZE[1],1)   
+            classifier = SevenEmotionsClassifier()
+            preprocessor = Preprocessor(classifier,input_shape = input_shape)
+            postProcessor = PostProcessor(classifier)
+            neuralNet = NeuralNet(input_shape,preprocessor = preprocessor,train = False)
+            face_detector = dlib.get_frontal_face_detector()
+            neuralNet.load_model(MODEL_PATH)
+            # cap = cv2.VideoCapture(-1)
+            cap = cv2.VideoCapture("/home/mtk/iCog/projects/emopy/test-videos/75Emotions.mp4")
+            while cap.isOpened():
+                ret,frame = cap.read()
+                currentWidth = frame.shape[1]
+                width = 600
+                ratio = currentWidth/float(width)
+                height = frame.shape[0]/float(ratio)
+                frame = cv2.resize(frame,(width,int(height)))
+                faces,rectangles = preprocessor.get_faces(frame,face_detector)
+                if(len(faces)>0):
+                    emotions = []
+                    for i in range(len(faces)):
+                        print faces[i].shape
+                        face = preprocessor.sanitize(faces[i]).astype(np.float32)/255;
+                        print face.shape
+                        predictions = neuralNet.predict(face.reshape(-1,48,48,1))[0]
+                        print predictions
+                        emotions.append(classifier.get_string(arg_max(predictions)))
+
+                    postProcessor.overlay(frame,rectangles,emotions)
                 cv2.imshow("Webcam",frame)
                 if (cv2.waitKey(10) & 0xFF == ord('q')):
                     break

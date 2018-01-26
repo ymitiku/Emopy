@@ -5,5 +5,5 @@ PATH2SAVE_MODELS = "models"
 DATA_SET_DIR = "/home/mtk/iCog/projects/emopy/dataset/all"
 LOG_DIR = "logs"
 STEPS_PER_EPOCH = 1000
-NETWORK_TYPE = "dinn" # mi for multi input or si for single input
+NETWORK_TYPE = "mi" # mi for multi input or si for single input
 AUGMENTATION = True

@@ -134,8 +134,8 @@ class NeuralNet(object):
         self.logger.log_model(self.models_local_folder, score)
 
     def predict(self,face):
-        print face.shape
         # assert face.shape == IMG_SIZE, "Face image size should be "+str(IMG_SIZE)
         face = face.reshape(-1,48,48,1)
-        emotions = self.model.predict(face)[0]
+        face = face.astype(np.float32)/255
+        emotions = self.model.predict(face)
         return emotions

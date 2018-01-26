@@ -58,15 +58,11 @@ class MultiInputNeuralNet(NeuralNet):
             neural network model
         """
         image_input_layer = Input(shape=self.input_shape)
-        image_layer = Conv2D(32, (7, 7), activation='relu',padding= "valid",kernel_initializer="glorot_normal")(image_input_layer)
-        image_layer = Dropout(.2)(image_layer)
+        image_layer = Conv2D(32, (3, 3), activation='relu',padding= "valid",kernel_initializer="glorot_normal")(image_input_layer)
         image_layer = MaxPooling2D(pool_size=(2, 2))(image_layer)
-        image_layer = Conv2D(64,(5,5),activation = "relu",padding="valid",kernel_initializer="glorot_normal")(image_layer)
-        image_layer = Dropout(.2)(image_layer)
+        image_layer = Conv2D(64,(3,3),activation = "relu",padding="valid",kernel_initializer="glorot_normal")(image_layer)
         image_layer = MaxPooling2D(pool_size=(2, 2))(image_layer)
         image_layer = Conv2D(128,(3,3),activation = "relu",padding="valid",kernel_initializer="glorot_normal")(image_layer)
-        image_layer = Dropout(.2)(image_layer)
-
         image_layer = Flatten()(image_layer)
 
         dlib_points_input_layer = Input(shape=(1,68,2))
@@ -99,7 +95,6 @@ class MultiInputNeuralNet(NeuralNet):
         merged_layers = keras.layers.concatenate([image_layer, dlib_points_layer,dlib_points_dist_layer,dlib_points_angle_layer])
         
         merged_layers = Dense(252, activation='relu')(merged_layers)
-        merged_layers = Dropout(0.2)(merged_layers)
         merged_layers = Dense(1024, activation='relu')(merged_layers)
         merged_layers = Dropout(0.2)(merged_layers)
         merged_layers = Dense(self.number_of_class, activation='softmax')(merged_layers)
