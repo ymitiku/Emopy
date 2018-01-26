@@ -18,6 +18,7 @@ from preprocess.dlib_input import DlibInputPreprocessor
 from nets.dlib_inputs import DlibPointsInputNeuralNet
 maxSequenceLength = 10
 from test_config import MODEL_PATH
+from train_config import DATA_SET_DIR,EPOCHS,LEARNING_RATE,STEPS_PER_EPOCH,AUGMENTATION,BATCH_SIZE
 
 def run():
     if SESSION == 'train':
@@ -171,3 +172,31 @@ def run_test():
                 if (cv2.waitKey(10) & 0xFF == ord('q')):
                     break
             cv2.destroyAllWindows()
+
+def start_train_program(network_type=NETWORK_TYPE ,dataset_dir=DATA_SET_DIR,epochs=EPOCHS,batch_size=BATCH_SIZE,lr=LEARNING_RATE,steps=STEPS_PER_EPOCH,augmentation=AUGMENTATION):
+    input_shape = (IMG_SIZE[0],IMG_SIZE[1],1)
+    classifier = SevenEmotionsClassifier()
+    if(network_type == "mi"):
+        preprocessor = MultiInputPreprocessor(classifier,input_shape = input_shape,batch_size=batch_size,augmentation = augmentation)
+        neuralNet = MultiInputNeuralNet(input_shape,preprocessor=preprocessor,
+        learning_rate= lr,batch_size = batch_size,epochs = epochs,steps_per_epoch = steps,dataset_dir= dataset_dir
+        )
+    elif network_type == "si":
+        preprocessor = Preprocessor(classifier,input_shape = input_shape,batch_size=batch_size,augmentation = augmentation)
+        neuralNet = NeuralNet(input_shape,preprocessor=preprocessor,train=True)
+    elif network_type =="rnn":
+        preprocessor = SequencialPreprocessor(classifier,input_shape = input_shape,batch_size=batch_size,augmentation = augmentation)("dataset/ck-split")
+        neuralNet = LSTMNet(input_shape,preprocessor=preprocessor,train=True)
+    elif network_type =="drnn":
+        preprocessor = DlibSequencialPreprocessor(classifier,input_shape = input_shape,batch_size=batch_size,augmentation = augmentation)("dataset/ck-split")
+        neuralNet = DlibLSTMNet(input_shape,preprocessor=preprocessor,train=True)
+    elif network_type =="dinn":
+        preprocessor = DlibInputPreprocessor(classifier,input_shape = input_shape,batch_size=batch_size,augmentation = augmentation)
+        neuralNet = DlibPointsInputNeuralNet(input_shape,preprocessor=preprocessor,train=True)
+
+    neuralNet.train()
+def start_test_program():
+    pass
+
+
+

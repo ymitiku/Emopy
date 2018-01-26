@@ -1,4 +1,4 @@
-BATCH_SIZE = 128 # Batch sized used for traing.
+BATCH_SIZE = 32 # Batch sized used for traing.
 EPOCHS = 100
 LEARNING_RATE = 1e-4
 PATH2SAVE_MODELS = "models"

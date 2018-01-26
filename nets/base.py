@@ -1,6 +1,6 @@
 from keras.layers  import Input, Flatten, Dense, Conv2D, MaxPooling2D, Dropout
 from keras.models import Sequential,Model, model_from_json
-from train_config import LEARNING_RATE,EPOCHS,BATCH_SIZE,DATA_SET_DIR,LOG_DIR,PATH2SAVE_MODELS,STEPS_PER_EPOCH
+from train_config import LOG_DIR,PATH2SAVE_MODELS
 from test_config import MODEL_PATH
 import os
 import keras
@@ -24,12 +24,17 @@ class NeuralNet(object):
     
     """
     
-    def __init__(self,input_shape,preprocessor = None,logger=None,train=True):
+    def __init__(self,input_shape,learning_rate,batch_size,epochs,steps_per_epoch,preprocessor = None,logger=None,train=True):
         self.input_shape = input_shape
         assert len(input_shape) == 3, "Input shape of neural network should be length of 3. e.g (48,48,1)" 
         self.models_local_folder = "nn"
         self.logs_local_folder = self.models_local_folder
         self.preprocessor = preprocessor
+
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.learning_rate = learning_rate
+        self.steps_per_epoch = steps_per_epoch
         
         if not os.path.exists(os.path.join(LOG_DIR,self.logs_local_folder)):
             os.makedirs(os.path.join(LOG_DIR,self.logs_local_folder))
@@ -44,9 +49,6 @@ class NeuralNet(object):
             self.model = self.load_model("models/nn/nn-16")
         else:
             self.model = self.load_model(MODEL_PATH)
-        self.epochs = EPOCHS
-        self.batch_size = BATCH_SIZE
-        self.steps_per_epoch = STEPS_PER_EPOCH
 
     def build(self):
         """
@@ -121,7 +123,7 @@ class NeuralNet(object):
         
         
         self.model.compile(loss=keras.losses.categorical_crossentropy,
-                    optimizer=keras.optimizers.Adam(LEARNING_RATE),
+                    optimizer=keras.optimizers.Adam(self.learning_rate),
                     metrics=['accuracy'])
         # self.model.fit(x_train,y_train,epochs = EPOCHS, 
         #                 batch_size = BATCH_SIZE,validation_data=(x_test,y_test))
