@@ -12,10 +12,12 @@ from nets.multinput import MultiInputNeuralNet
 from nets.rnn import LSTMNet,DlibLSTMNet
 from train_config import NETWORK_TYPE,AUGMENTATION
 from preprocess.sequencial import SequencialPreprocessor,DlibSequencialPreprocessor
+
 from process.sequencial import EmopySequencialProcess
 from nets.vggface import VGGFaceEmopyNet
 import numpy as np
 from test_config import TEST_VIDEO
+
 def run():
     if SESSION == 'train':
         run_train()
@@ -34,6 +36,7 @@ def run_train():
     elif NETWORK_TYPE =="rnn":
         preprocessor = SequencialPreprocessor(classifier,input_shape = input_shape,augmentation = AUGMENTATION)("dataset/ck-split")
         neuralNet = LSTMNet(input_shape,preprocessor=preprocessor,train=True)
+
     elif NETWORK_TYPE == "vgg":
         preprocessor = Preprocessor(classifier,input_shape = input_shape,augmentation = AUGMENTATION)
         neuralNet = VGGFaceEmopyNet(input_shape,preprocessor=preprocessor,train=True)
@@ -45,8 +48,25 @@ def run_train():
         process = EmopySequencialProcess(input_shape,6)
         process.process_video("/home/mtk/iCog/projects/emopy/test-videos/75Emotions.mp4")
 
+
     neuralNet.train()   
 
+
+def arg_max(array):
+        max_value = array[0]
+        index = 0
+        for i,el in enumerate(array):
+            if el > max_value:
+                index = i
+                max_value = el
+        return index
+
+
+
+def draw_landmarks(frame,landmarks):
+    for i in range(len(landmarks)):
+        landmark = landmarks[i]
+        cv2.circle(frame,(int(landmark[0]),int(landmark[1])),1,color=(255,0,0),thickness=1)
 
 def run_test():
     input_shape = (IMG_SIZE[0],IMG_SIZE[1],1)   
@@ -72,6 +92,7 @@ def run_test():
     elif TEST_TYPE =="video":
         process_video(TEST_VIDEO,preprocessor,postProcessor,neuralNet)
     elif TEST_TYPE == "webcam":
+
         process_video(-1,preprocessor,postProcessor,neuralNet)
 def process_video(path,preprocessor,postProcessor,neuralNet):
     cap =  cv2.VideoCapture(path)
@@ -96,7 +117,5 @@ def process_video(path,preprocessor,postProcessor,neuralNet):
         cv2.imshow("Image",frame)
         if (cv2.waitKey(10) & 0xFF == ord('q')):
             break
-            
 
 
-    

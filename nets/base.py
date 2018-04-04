@@ -1,6 +1,8 @@
 from keras.layers  import Input, Flatten, Dense, Conv2D, MaxPooling2D, Dropout
 from keras.models import Sequential,Model, model_from_json
+
 from train_config import LEARNING_RATE,EPOCHS,BATCH_SIZE,DATA_SET_DIR,LOG_DIR,STEPS_PER_EPOCH
+
 from test_config import MODEL_PATH
 import os
 import keras
@@ -24,20 +26,26 @@ class NeuralNet(object):
     
     """
     
-    def __init__(self,input_shape,preprocessor = None,logger=None,train=True):
+    def __init__(self,input_shape,learning_rate,batch_size,epochs,steps_per_epoch,preprocessor = None,logger=None,train=True):
         self.input_shape = input_shape
         assert len(input_shape) == 3, "Input shape of neural network should be length of 3. e.g (48,48,1)" 
     
         self.preprocessor = preprocessor
+
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.learning_rate = learning_rate
+        self.steps_per_epoch = steps_per_epoch
         
         self.logger = logger
         self.feature_extractors = ["image"]
         self.number_of_class = self.preprocessor.classifier.get_num_class()
         if train:
-            self.model = self.build()
+            # self.model = self.build()
+            self.model = self.load_model("models/nn/nn-16")
         else:
             self.model = self.load_model(MODEL_PATH)
-        
+
 
     def build(self):
         """
@@ -50,8 +58,9 @@ class NeuralNet(object):
         """
         model = Sequential()
         model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', padding= "same", input_shape=self.input_shape,kernel_initializer="glorot_normal"))
-        model.add(Dropout(0.2))
+        # model.add(Dropout(0.2))
         model.add(Conv2D(64, (3, 3), activation='relu',padding= "same",kernel_initializer="glorot_normal"))
+
         model.add(Dropout(0.2))
         model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Conv2D(64, (3, 3), activation='relu',padding= "same",kernel_initializer="glorot_normal"))
@@ -62,6 +71,7 @@ class NeuralNet(object):
         model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Conv2D(252, (3, 3), activation='relu',padding= "same",kernel_initializer="glorot_normal"))
         model.add(Dropout(0.2))
+
         model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Flatten())
         model.add(Dense(252, activation='relu'))
@@ -117,7 +127,9 @@ class NeuralNet(object):
         
         
         self.model.compile(loss=keras.losses.categorical_crossentropy,
+
                     optimizer=keras.optimizers.Adam(args.lr),
+
                     metrics=['accuracy'])
         self.model.summary()
         # self.model.fit(x_train,y_train,epochs = EPOCHS, 
@@ -131,8 +143,8 @@ class NeuralNet(object):
         self.logger.log_model(args, score,None)
 
     def predict(self,face):
-        print face.shape
         # assert face.shape == IMG_SIZE, "Face image size should be "+str(IMG_SIZE)
         face = face.reshape(-1,48,48,1)
-        emotions = self.model.predict(face)[0]
+        face = face.astype(np.float32)/255
+        emotions = self.model.predict(face)
         return emotions

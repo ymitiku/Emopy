@@ -37,6 +37,7 @@ class Preprocessor(object):
                 zoom_range = 0.2,
                 horizontal_flip=True,
                 data_format="channels_last"
+
                  
             )
         self.feature_extractor = ImageFeatureExtractor()

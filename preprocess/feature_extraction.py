@@ -71,8 +71,10 @@ class DlibFeatureExtractor(FeatureExtractor):
 
         distances,angles = self.get_distances_angles(dlib_points,centroids)
 
+        IMAGE_CENTER = np.array(IMG_SIZE)/2
+        IMG_WIDTH = IMG_SIZE[1]
         # normalize
-        dlib_points /= 50.0;
+        dlib_points = (dlib_points - IMAGE_CENTER)/IMG_WIDTH
         dlib_points = dlib_points.reshape((-1,1,68,2))
         
 
@@ -83,4 +85,5 @@ class DlibFeatureExtractor(FeatureExtractor):
         angles /= (2 * np.pi)
         angles = angles.reshape(-1,1,68,1)
         images = images.astype(np.float32)/255
+
         return images,dlib_points,distances,angles
