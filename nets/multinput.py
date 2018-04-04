@@ -1,6 +1,8 @@
 from keras.layers  import Input, Flatten, Dense, Conv2D, MaxPooling2D, Dropout
 from keras.models import Sequential,Model, model_from_json
-from train_config import DATA_SET_DIR,LOG_DIR,PATH2SAVE_MODELS
+
+from train_config import LEARNING_RATE,EPOCHS,BATCH_SIZE,DATA_SET_DIR,LOG_DIR,STEPS_PER_EPOCH
+
 from test_config import MODEL_PATH
 import os
 import keras
@@ -104,7 +106,7 @@ class MultiInputNeuralNet(NeuralNet):
         if not os.path.exists(os.path.join(LOG_DIR,self.logs_local_folder)):
             os.makedirs(os.path.join(LOG_DIR,self.logs_local_folder))
         if logger is None:
-            self.logger = EmopyLogger([os.path.join(LOG_DIR,self.logs_local_folder,"nn.txt")])
+            self.logger = EmopyLogger([os.path.join(LOG_DIR,self.logs_local_folder,self.logs_local_folder+".txt")])
         else:
             self.logger = logger
         self.feature_extractors = ["image"]
