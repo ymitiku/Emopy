@@ -5,23 +5,35 @@ import numpy as np
 import cv2
 from sklearn.utils  import shuffle
 from train_config import BATCH_SIZE
-import dlib
-from config import IMG_SIZE
+
 from keras.preprocessing.image import ImageDataGenerator
+import dlib
+from preprocess.feature_extraction import DlibFeatureExtractor
+from config import IMG_SIZE
 
 class SequencialPreprocessor(Preprocessor):
 
-    def __init__(self,classifier, input_shape = None,batch_size=BATCH_SIZE,augmentation = False,verbose = True,max_sequence_length=10):
+    def __init__(self,classifier, input_shape = None,batch_size=BATCH_SIZE,augmentation = False,verbose = True,max_sequence_length=6):
         Preprocessor.__init__(self,classifier,input_shape,batch_size,augmentation,verbose)
         self.max_sequence_length = max_sequence_length
-        self.datagenerator = ImageDataGenerator(rotation_range=20,zoom_range=0.2,height_shift_range=0.2,width_shift_range=0.2) 
+        self.datagenerator = ImageDataGenerator(
+                rotation_range = 40,
+                width_shift_range = 0.1,
+                height_shift_range = 0.1,
+                shear_range = 0.1,
+                zoom_range = 0.1,
+                horizontal_flip=True,
+                data_format="channels_last"
+                 
+            )
 
-    def get_sequences_images(self,sequences_dirs):
-        output = np.zeros((len(sequences_dirs),self.max_sequence_length,self.input_shape[0],self.input_shape[1],self.input_shape[2]),dtype=np.uint8)
+    def get_sequences_images(self,sequences_dirs,augmentation=False):
+        output = np.zeros((len(sequences_dirs),self.max_sequence_length,self.input_shape[0],self.input_shape[1],self.input_shape[2]))
+
         for i in range(len(sequences_dirs)):
-            output[i] = self.get_sequence_images(sequences_dirs[i])
+            output[i] = self.get_sequence_images(sequences_dirs[i],augmentation)
         return output
-    def get_sequence_images(self,sequence_dir):
+    def get_sequence_images(self,sequence_dir,augmentation=False):
         files = os.listdir(sequence_dir)
         if len(files)==0:
             raise Exception("Sequence "+sequence_dir+" Contains no images")
@@ -29,56 +41,58 @@ class SequencialPreprocessor(Preprocessor):
         output = np.zeros((self.max_sequence_length,self.input_shape[0],self.input_shape[1],self.input_shape[2]),dtype=np.uint8)
         index = 0
         files.sort()
-        steps =float(len(files))/self.max_sequence_length
-        currentOutputIndex = 0
-        while int(index)<len(files) and currentOutputIndex<self.max_sequence_length:
+        steps = len(files)/float(self.max_sequence_length)
+        currentStep = 0
+        while index<len(files) and currentStep < self.max_sequence_length:
             img = cv2.imread(os.path.join(sequence_dir,files[int(index)]))
             img = self.sanitize(img).reshape(self.input_shape)
-            # img = img.reshape(IMG_SIZE[0],IMG_SIZE[1],1)
-            # img = self.datagenerator.random_transform(img)
-            # img = img.reshape(IMG_SIZE)
-            output[currentOutputIndex] = img
-            index +=steps
-            currentOutputIndex +=1
-        # pad with last image
-        currentOutputIndex = int(currentOutputIndex)
-        last_image = np.array(img,copy=True)
-        while currentOutputIndex<self.max_sequence_length:
-            output[currentOutputIndex] = last_image
-            currentOutputIndex +=1
+            if augmentation:
+                img = self.datagenerator.random_transform(img)
+            output[currentStep] = img
+            index += steps
+            currentStep +=1
+        last_image = np.array(output[currentStep-1])
+        while currentStep< self.max_sequence_length:
+            output[currentStep] = np.array(last_image)
+            currentStep+=1
+        
         return output
     def load_dataset(self,path):
         assert os.path.exists(path),"Specified dataset directory '"+path+"' does not exist "
-        self.train_sequences = []
-        self.train_sequence_labels = []
+        train_sequences = []
+        train_sequence_labels = []
+
         for emdir in os.listdir(os.path.join(path,"train")):
             if emdir == "contempt":
                 continue
             print("Loading ",os.path.join(path,"train",emdir))
             for sequence in os.listdir(os.path.join(path,"train",emdir)):
-                self.train_sequences += [sequence]
-                self.train_sequence_labels +=[emdir]
-        self.train_sequences = np.array(self.train_sequences)
-        self.train_sequence_labels = np.array(self.train_sequence_labels)
-        test_seq = []
-        test_seq_label = []
+
+                train_sequences += [sequence]
+                train_sequence_labels +=[emdir]
+
+
+        test_sequences = []
+        test_sequence_labels = []
         for emdir in os.listdir(os.path.join(path,"test")):
             if emdir == "contempt":
                 continue
             print("Loading ",os.path.join(path,"test",emdir))
             for sequence in os.listdir(os.path.join(path,"test",emdir)):
-                test_seq += [sequence]
-                test_seq_label +=[emdir]
+                test_sequences += [sequence]
+                test_sequence_labels +=[emdir]
+                
+        self.train_sequences = np.array(train_sequences)
+        self.train_sequence_labels = np.array(train_sequence_labels)
 
-        
+        self.test_sequences = np.zeros((len(test_sequences),self.max_sequence_length,self.input_shape[0],self.input_shape[1],self.input_shape[2]))
+     
+        self.test_sequence_labels = np.zeros((len(test_sequence_labels),6))
 
-        self.test_sequences = np.zeros((len(test_seq),self.max_sequence_length,self.input_shape[0],self.input_shape[1],self.input_shape[2]))
-        num_class=self.classifier.get_num_class()
-        self.test_sequence_labels = np.zeros((len(test_seq_label),6))
+        for i in range(len(test_sequences)):
+            self.test_sequences[i] = self.get_sequence_images(os.path.join(path,"test",test_sequence_labels[i],test_sequences[i]))
+            self.test_sequence_labels[i] = np.eye(6)[self.classifier.get_class(test_sequence_labels[i])]
 
-        for i in range(len(test_seq)):
-            self.test_sequences[i] = self.get_sequence_images(os.path.join(path,"test",test_seq_label[i],test_seq[i]))
-            self.test_sequence_labels[i] = np.eye(6)[self.classifier.get_class(test_seq_label[i])]
         self.test_sequences = self.test_sequences.astype(np.float32)/255;
         self.test_sequences,self.test_sequence_labels = shuffle(self.test_sequences,self.test_sequence_labels)
 
@@ -106,7 +120,9 @@ class SequencialPreprocessor(Preprocessor):
                 y = np.zeros((len(sequences_labels),6))
                 for j in range(len(sequences)):
                     sequences_dirs.append(os.path.join(self.dataset_path,"train",sequences_labels[j],sequences[j]))
-                X = self.get_sequences_images(sequences_dirs)
+
+                X = self.get_sequences_images(sequences_dirs,True)
+
                 y = np.zeros((len(sequences_labels),6))
                 for k  in range(len(sequences_labels)):                
                     y[k] = np.eye(6)[self.classifier.get_class(sequences_labels[k])]
@@ -114,13 +130,13 @@ class SequencialPreprocessor(Preprocessor):
                 yield X,y
 
 
-
-
 class DlibSequencialPreprocessor(SequencialPreprocessor):
-    def __init__(self,classifier, input_shape = None,batch_size=BATCH_SIZE,augmentation = False,verbose = True,max_sequence_length=10,predictor_path = "shape_predictor_68_face_landmarks.dat"):
+    def __init__(self,classifier, input_shape = None,batch_size=BATCH_SIZE,augmentation = False,verbose = True,max_sequence_length=71,predictor_path = "shape_predictor_68_face_landmarks.dat"):
         SequencialPreprocessor.__init__(self,classifier,input_shape,batch_size,augmentation,verbose,max_sequence_length)
         self.detector = dlib.get_frontal_face_detector()
         self.predictor = dlib.shape_predictor(predictor_path)
+    
+
     def get_face_dlib_points(self,image):
         face = dlib.rectangle(0,0,image.shape[1]-1,image.shape[0]-1)
         img = image.reshape(IMG_SIZE[0],IMG_SIZE[1])
@@ -129,53 +145,15 @@ class DlibSequencialPreprocessor(SequencialPreprocessor):
         output = np.zeros((68,2))
         for i,point in enumerate(parts):
             output[i]=[point.x,point.y]
-        
+        output = np.array(output).reshape((1,68,2,1))
         return output
     def get_dlib_points(self,images):
-        output = np.zeros((len(images),68,2))
+        output = np.zeros((len(images),68,2,1))
         for i in range(len(images)):
             output[i] = self.get_face_dlib_points(images[i])
-        output = np.expand_dims(output,axis=3)
         return output
-    def load_dataset(self,path):
-        assert os.path.exists(path),"Specified dataset directory '"+path+"' does not exist "
-        self.train_sequences = []
-        self.train_sequence_labels = []
-        for emdir in os.listdir(os.path.join(path,"train")):
-            if emdir == "contempt":
-                continue
-            print("Loading ",os.path.join(path,"train",emdir))
-            for sequence in os.listdir(os.path.join(path,"train",emdir)):
-                self.train_sequences += [sequence]
-                self.train_sequence_labels +=[emdir]
-        self.train_sequences = np.array(self.train_sequences)
-        self.train_sequence_labels = np.array(self.train_sequence_labels)
-        test_seq = []
-        test_seq_label = []
-        for emdir in os.listdir(os.path.join(path,"test")):
-            if emdir == "contempt":
-                continue
-            print("Loading ",os.path.join(path,"test",emdir))
-            for sequence in os.listdir(os.path.join(path,"test",emdir)):
-                test_seq += [sequence]
-                test_seq_label +=[emdir]
 
-        
 
-        test_sequences_images = np.zeros((len(test_seq),self.max_sequence_length,self.input_shape[0],self.input_shape[1],self.input_shape[2]),dtype=np.uint8)
-        num_class=self.classifier.get_num_class()
-        self.test_sequence_labels = np.zeros((len(test_seq_label),6))
-        print "loading test images"
-        for i in range(len(test_seq)):
-            test_sequences_images[i] = self.get_sequence_images(os.path.join(path,"test",test_seq_label[i],test_seq[i]))
-            self.test_sequence_labels[i] = np.eye(6)[self.classifier.get_class(test_seq_label[i])]
-        
-        test_sequences_images,self.test_sequence_labels = shuffle(test_sequences_images,self.test_sequence_labels)
-        self.test_sequences_dpoints = np.zeros((len(test_sequences_images),self.max_sequence_length,68,2,1))
-        print "extracting dlib points"
-        for i in range(len(test_sequences_images)):
-            self.test_sequences_dpoints[i] = self.get_dlib_points(test_sequences_images[i])
-        self.test_sequences_dpoints/= IMG_SIZE[0]
     def flow(self):
         assert self.called, "Preprocessor should be called with path of dataset first to use flow method."
         while True:
@@ -185,15 +163,64 @@ class DlibSequencialPreprocessor(SequencialPreprocessor):
                 sequences = self.train_sequences[currentIndexes]
                 sequences_labels = self.train_sequence_labels[currentIndexes]
                 sequences_dirs = []
-                y = np.zeros((len(sequences_labels),6))
+
+               
                 for j in range(len(sequences)):
                     sequences_dirs.append(os.path.join(self.dataset_path,"train",sequences_labels[j],sequences[j]))
-                X = self.get_sequences_images(sequences_dirs)
+                X = self.get_sequences_images(sequences_dirs,True)
                 y = np.zeros((len(sequences_labels),6))
                 for k  in range(len(sequences_labels)):                
                     y[k] = np.eye(6)[self.classifier.get_class(sequences_labels[k])]
+                X = X.astype(np.uint8)
+
                 dlib_points = self.get_dlib_points(X[0])
                 dlib_points = dlib_points.astype(np.float32)
                 dlib_points /= IMG_SIZE[0]
                 dlib_points = np.expand_dims(dlib_points,0)
+
+                
                 yield dlib_points,y
+            
+    def load_dataset(self,path):
+        assert os.path.exists(path),"Specified dataset directory '"+path+"' does not exist "
+        train_sequences = []
+        train_sequence_labels = []
+        for emdir in os.listdir(os.path.join(path,"train")):
+            if emdir == "contempt":
+                continue
+            print("Loading ",os.path.join(path,"train",emdir))
+            for sequence in os.listdir(os.path.join(path,"train",emdir)):
+                train_sequences += [sequence]
+                train_sequence_labels +=[emdir]
+
+
+        test_sequences = []
+        test_sequence_labels = []
+        for emdir in os.listdir(os.path.join(path,"test")):
+            if emdir == "contempt":
+                continue
+            print("Loading ",os.path.join(path,"test",emdir))
+            for sequence in os.listdir(os.path.join(path,"test",emdir)):
+                test_sequences += [sequence]
+                test_sequence_labels +=[emdir]
+                
+        self.train_sequences = np.array(train_sequences)
+        self.train_sequence_labels = np.array(train_sequence_labels)
+
+        test_sequences_array = np.zeros((len(test_sequences),self.max_sequence_length,self.input_shape[0],self.input_shape[1],self.input_shape[2]))
+     
+        self.test_sequence_labels = np.zeros((len(test_sequence_labels),6))
+        print "loading test images"
+        for i in range(len(test_sequences)):
+            test_sequences_array[i] = self.get_sequence_images(os.path.join(path,"test",test_sequence_labels[i],test_sequences[i]))
+            self.test_sequence_labels[i] = np.eye(6)[self.classifier.get_class(test_sequence_labels[i])]
+        output_test_sequences = np.zeros((len(test_sequences_array),self.max_sequence_length,68,2,1))
+        for index in range(len(test_sequences_array)):
+            output_test_sequences[index] = self.get_dlib_points(test_sequences_array[i].astype(np.uint8))
+        
+        self.test_sequences = output_test_sequences
+        self.test_sequences /= IMG_SIZE[0]
+        print "loaded test images"
+        
+            
+
