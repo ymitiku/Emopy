@@ -16,12 +16,21 @@ class EmopyLogger(object):
             if f == sys.stdout:
                 print(string)
             elif type(f) == str:
+                parent, model_file  = os.path.split(f)
+                if not os.path.exists(parent):
+                    
+                    print("Log file directory does not exists creating now...")
+                    os.mkdir(parent)
                 with open(f,"a+") as out_file:
                     out_file.write(string+"\n")
     def add_log_file(self,log_file):
         self.output_files.append(log_file)
     def log_model(self,args,score,anthor):
         parent, model_file  = os.path.split(args.model_path)
+        if not os.path.exists(parent):
+            if args.verbose:
+                print("Log file directory does not exists creating now...")
+            os.mkdir(parent)
         model_number = np.fromfile(os.path.join(parent,"model_number.txt"),dtype=int)
         model_file_name = model_file+"-"+str(model_number[0]-1)
     

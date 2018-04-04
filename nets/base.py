@@ -26,25 +26,19 @@ class NeuralNet(object):
     
     """
     
-    def __init__(self,input_shape,learning_rate,batch_size,epochs,steps_per_epoch,preprocessor = None,logger=None,train=True):
+    def __init__(self,input_shape,preprocessor = None,logger=None,train=True):
         self.input_shape = input_shape
         assert len(input_shape) == 3, "Input shape of neural network should be length of 3. e.g (48,48,1)" 
     
         self.preprocessor = preprocessor
 
-        self.epochs = epochs
-        self.batch_size = batch_size
-        self.learning_rate = learning_rate
-        self.steps_per_epoch = steps_per_epoch
         
         self.logger = logger
         self.feature_extractors = ["image"]
         self.number_of_class = self.preprocessor.classifier.get_num_class()
-        if train:
-            # self.model = self.build()
-            self.model = self.load_model("models/nn/nn-16")
-        else:
-            self.model = self.load_model(MODEL_PATH)
+
+        self.model = self.build()
+           
 
 
     def build(self):
