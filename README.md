@@ -3,9 +3,8 @@
 Emopy is python module for training emotion recognition from face images models
 
 ## Getting Started
-This module contains the following types of networks for emotion recognition
-### Face Image input model
-This network takes face images of shape(batch_size,48,48,1) as input.
+This module contains the six types of networks for emotion recognition
+
 #### How to run trainining program
 ```
 python -m train --net face --emotions typeof-emotion-classsification --batch batch-size --epochs epoch-number --steps number-of-steps-per-epoch --lr learning-rate --dataset_path dataset-path --model_path path-to-save-model-without-extension --augmentation use-augmentation --verbose print-logs --sequence_length valid-only-for-rnn-networks
