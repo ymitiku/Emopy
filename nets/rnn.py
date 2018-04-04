@@ -17,9 +17,9 @@ from loggers.base import EmopyLogger
 
 
 class LSTMNet(NeuralNet):
-    def __init__(self,input_shape,convnet_model_path=None,preprocessor = None,logger=None,train=True):
+    def __init__(self,input_shape,convnet_model_path=None,preprocessor = None,logger=None,train=True,max_sequence_length=71):
         self.convnet_model_path = convnet_model_path;
-        self.max_sequence_length = 71
+        self.max_sequence_length = max_sequence_length
         NeuralNet.__init__(self,input_shape,preprocessor,logger,train)
         self.models_local_folder = "rnn"
         self.logs_local_folder = self.models_local_folder

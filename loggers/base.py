@@ -1,15 +1,17 @@
 from __future__ import print_function
 import sys
 import os
-from train_config import PATH2SAVE_MODELS,DATA_SET_DIR,LOG_DIR, BATCH_SIZE,EPOCHS,LEARNING_RATE
+from train_config import DATA_SET_DIR,LOG_DIR, BATCH_SIZE,EPOCHS,LEARNING_RATE
 import numpy as np
 import time
 
 
 class EmopyLogger(object):
     def __init__(self, output_files=[sys.stdout]):
+        assert type(output_files)==list,"output files should be list"
         self.output_files = output_files
     def log(self,string):
+        
         for f in self.output_files:
             if f == sys.stdout:
                 print(string)
@@ -18,9 +20,10 @@ class EmopyLogger(object):
                     out_file.write(string+"\n")
     def add_log_file(self,log_file):
         self.output_files.append(log_file)
-    def log_model(self,models_local_folder,score):
-        model_number = np.fromfile(os.path.join(PATH2SAVE_MODELS,models_local_folder,"model_number.txt"),dtype=int)
-        model_file_name = models_local_folder+"-"+str(model_number[0]-1)
+    def log_model(self,args,score,anthor):
+        parent, model_file  = os.path.split(args.model_path)
+        model_number = np.fromfile(os.path.join(parent,"model_number.txt"),dtype=int)
+        model_file_name = model_file+"-"+str(model_number[0]-1)
     
         self.log("**************************************")
         self.log("Trained model "+model_file_name+".json")

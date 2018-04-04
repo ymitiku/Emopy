@@ -5,3 +5,6 @@ shape_predictor_68_face_landmarks.dat
 .idea/*
 .vscode/*
 pretrained-models/*
+models-old/*
+logs-old/*
+logs/*
