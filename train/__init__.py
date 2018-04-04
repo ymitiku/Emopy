@@ -20,7 +20,6 @@ def get_cmd_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-n","--net",default="face",type=str)
-    parser.add_argument("-c","--emotions",default=EMOTION_CLASSIFICATION,type=str)
     parser.add_argument("-b","--batch",default=BATCH_SIZE,type=int)
     parser.add_argument("-e","--epochs",default=EPOCHS,type=int)
     parser.add_argument("-s","--steps",default=STEPS_PER_EPOCH,type=int)
@@ -30,6 +29,7 @@ def get_cmd_args():
     parser.add_argument("-a","--augmentation",default=AUGMENTATION,type=bool)
     parser.add_argument("-v","--verbose",default=False,type=bool)
     parser.add_argument("-x","--sequence_length",default=71,type=int)
+    parser.add_argument("-y","--emotions",default=EMOTION_CLASSIFICATION,type=str)
 
     args = parser.parse_args()
     return args
@@ -39,9 +39,9 @@ def get_network(args):
     if args.emotions=="all":
         classifier = SevenEmotionsClassifier()
     elif args.emotions=="pos-neg":
-        classifier = PositiveNeutralClassifier()
-    elif args.emotions=="pos-neu":
         classifier = PositiveNegetiveClassifier()
+    elif args.emotions=="pos-neu":
+        classifier = PositiveNeutralClassifier()
     else:
         raise Exception("emotions should be one of all,pos-neg or pos-neu. But it is "+str(args.emotions))
     input_shape = (48,48,1)

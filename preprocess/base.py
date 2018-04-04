@@ -6,6 +6,7 @@ import cv2
 import dlib
 from keras.preprocessing.image import ImageDataGenerator
 from feature_extraction import ImageFeatureExtractor
+from util import SevenEmotionsClassifier,PositiveNeutralClassifier,PositiveNegetiveClassifier
 
 class Preprocessor(object):
     """"Base class for preprocessors.
@@ -57,6 +58,9 @@ class Preprocessor(object):
         self.train_image_emotions = []
         for emdir in os.listdir(os.path.join(path,"train")):
             print("Loading ",os.path.join(path,"train",emdir))
+            if type(self.classifier)== PositiveNeutralClassifier:
+                if not(emdir in ["happy","surprise","neutral"]):
+                    continue
             for img_file in os.listdir(os.path.join(path,"train",emdir)):
                 self.train_image_paths.append(os.path.join(path,"train",emdir,img_file))
                 self.train_image_emotions.append(self.classifier.get_class(emdir))
@@ -64,6 +68,9 @@ class Preprocessor(object):
         self.test_image_emotions = []
         for emdir in os.listdir(os.path.join(path,"test")):
             print("Loading ",os.path.join(path,"test",emdir))
+            if type(self.classifier)== PositiveNeutralClassifier:
+                if not(emdir in ["happy","surprise","neutral"]):
+                    continue
             for img_file in os.listdir(os.path.join(path,"test",emdir)):
                 self.test_image_paths.append(os.path.join(path,"test",emdir,img_file))
                 self.test_image_emotions.append(self.classifier.get_class(emdir))

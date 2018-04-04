@@ -70,5 +70,5 @@ class PositiveNegetiveClassifier(Classifier):
             return "negative"
     def get_class(self,string):
         assert string in ["happy","neutral","surprise","anger","disgust","fear","sad"],"Emotion must be either happy, neutral,sad, fear,disgust,sad or surprise for Positive negative classifier"
-        self.EMOTION_STATE[string]
+        return self.EMOTION_STATE[string]
     

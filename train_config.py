@@ -1,6 +1,6 @@
 
 from config import IMG_SIZE
-BATCH_SIZE = 1 # Batch sized used for traing.
+BATCH_SIZE = 32 # Batch sized used for traing.
 
 EPOCHS = 100
 LEARNING_RATE = 1e-4
