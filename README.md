@@ -20,7 +20,7 @@ To use other type of network see the following list
 * __dlib-rnn__ : Sequential images and dlib points features inputs RNN model
 
 ##### ```--emotions```
-This module can be used to train both seven basic emotions(ANGER,DISGUST,FEAR,HAPPY,SAD,SURPRISE AND NEUTRAL) classifier,positive neutral emotions(POSITIVE AND NEUTRAL) classifier or positive negetive emotions classifier
+This module can be used to train either seven basic emotions(ANGER,DISGUST,FEAR,HAPPY,SAD,SURPRISE AND NEUTRAL) classifier,positive neutral emotions(POSITIVE AND NEUTRAL) classifier or positive negetive emotions classifier or positive neutral classifier
 values of ```--emotions``` 
 * all : for seven emotion classifier
 * pos-neu : for positive neutral classifier
@@ -34,7 +34,9 @@ values of ```--emotions```
 ##### ```--dataset_path```
 Path to dataset. For non sequence classifications this directory should contain  train and test folders.
 ##### ```--model_path```
-Path to save model without extesion. e.g /home/user/models/model can be used to save model files json(/home/user/models/model.json) and h5(/home/user/models/model.h5).  other parameters are self explanatory.
+Path to save model without extesion. e.g /home/user/models/model can be used to save model files json(/home/user/models/model.json) and h5(/home/user/models/model.h5). 
+
+#### other parameters are self explanatory.
 
 
 
