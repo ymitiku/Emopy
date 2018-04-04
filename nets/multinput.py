@@ -91,30 +91,19 @@ class MultiInputNeuralNet(NeuralNet):
     
     """
     
-    def __init__(self,input_shape,learning_rate,batch_size,epochs,steps_per_epoch,dataset_dir,preprocessor = None,logger=None,train=True):
+    def __init__(self,input_shape,preprocessor = None,logger=None,train=True):
         self.input_shape = input_shape
         assert len(input_shape) == 3, "Input shape of neural network should be length of 3. e.g (48,48,1)" 
-        self.models_local_folder = "minn"
-        self.logs_local_folder = self.models_local_folder
-        self.preprocessor = preprocessor
-        self.epochs = epochs
-        self.batch_size = batch_size
-        self.learning_rate = learning_rate
-        self.steps_per_epoch = steps_per_epoch
-        self.dataset_dir= dataset_dir
         
-        if not os.path.exists(os.path.join(LOG_DIR,self.logs_local_folder)):
-            os.makedirs(os.path.join(LOG_DIR,self.logs_local_folder))
-        if logger is None:
-            self.logger = EmopyLogger([os.path.join(LOG_DIR,self.logs_local_folder,self.logs_local_folder+".txt")])
-        else:
-            self.logger = logger
+        self.preprocessor = preprocessor
+        
+        
+        
+        self.logger = logger
         self.feature_extractors = ["image"]
         self.number_of_class = self.preprocessor.classifier.get_num_class()
-        if train:
-            self.model = self.build()
-        else:
-            self.model = self.load_model(MODEL_PATH)
+        
+        self.model = self.build()
 
     def build(self):
         """
@@ -177,7 +166,7 @@ class MultiInputNeuralNet(NeuralNet):
 
     
 
-    def train(self):
+    def train(self,args):
         """Traines the neuralnet model.      
         This method requires the following two directory to exist
         /PATH-TO-DATASET-DIR/train
@@ -187,19 +176,19 @@ class MultiInputNeuralNet(NeuralNet):
         assert self.built == True , "Model not built yet."
         
         self.model.compile(loss=keras.losses.categorical_crossentropy,
-                    optimizer=keras.optimizers.Adam(self.learning_rate),
+                    optimizer=keras.optimizers.Adam(args.lr),
                     metrics=['accuracy'])
         # self.model.fit(x_train,y_train,epochs = EPOCHS, 
         #                 batch_size = BATCH_SIZE,validation_data=(x_test,y_test))
-        self.preprocessor = self.preprocessor(self.dataset_dir)
-        print "lr",self.learning_rate
-        print "batch_size",self.batch_size
-        self.model.fit_generator(self.preprocessor.flow(),steps_per_epoch=self.steps_per_epoch,
-                        epochs=self.epochs,
+        self.preprocessor = self.preprocessor(args.dataset_path)
+        print "lr",args.lr
+        print "batch_size",args.batch
+        self.model.fit_generator(self.preprocessor.flow(),steps_per_epoch=args.steps,
+                        epochs=args.epochs,
                         validation_data=([self.preprocessor.test_images,self.preprocessor.test_dpoints,self.preprocessor.dpointsDists,self.preprocessor.dpointsAngles], self.preprocessor.test_image_emotions))
         score = self.model.evaluate([self.preprocessor.test_images,self.preprocessor.test_dpoints,self.preprocessor.dpointsDists,self.preprocessor.dpointsAngles], self.preprocessor.test_image_emotions)
-        self.save_model()
-        self.logger.log_model(self.models_local_folder, score)
+        self.save_model(args)
+        self.logger.log_model(args, score,None)
 
     def predict(self,face):
         assert face.shape == IMG_SIZE, "Face image size should be "+str(IMG_SIZE)

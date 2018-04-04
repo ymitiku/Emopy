@@ -18,20 +18,13 @@ from loggers.base import EmopyLogger
 
 
 class LSTMNet(NeuralNet):
-    def __init__(self,input_shape,convnet_model_path=None,preprocessor = None,logger=None,train=True,max_sequence_length=71):
-        self.convnet_model_path = convnet_model_path;
+    def __init__(self,input_shape,preprocessor = None,logger=None,train=True,max_sequence_length=71):
+       
         self.max_sequence_length = max_sequence_length
 
         NeuralNet.__init__(self,input_shape,preprocessor,logger,train)
-        self.models_local_folder = "rnn"
-        self.logs_local_folder = self.models_local_folder
-        if not os.path.exists(os.path.join(LOG_DIR,self.logs_local_folder)):
-            os.makedirs(os.path.join(LOG_DIR,self.logs_local_folder))
-        if logger is None:
-            self.logger = EmopyLogger([os.path.join(LOG_DIR,self.logs_local_folder,self.logs_local_folder+".txt")])
-            print("Logging to file",os.path.join(LOG_DIR,self.logs_local_folder,self.logs_local_folder+".txt"))
-        else:
-            self.logger = logger
+        
+        self.logger = logger
         self.model = self.build()
     def build(self):
 
@@ -41,6 +34,12 @@ class LSTMNet(NeuralNet):
         model.add(TimeDistributed(Conv2D(32, (3, 3), padding='valid', activation='relu'),input_shape=(self.max_sequence_length, 48, 48, 1)))
 
         model.add(TimeDistributed(Conv2D(64, (3, 3), padding='valid', activation='relu')))
+        # model.add(TimeDistributed(Dropout(0.5)))
+        model.add(TimeDistributed(MaxPooling2D(pool_size=(2,2))))
+        model.add(TimeDistributed(Conv2D(128, (3, 3), padding='valid', activation='relu')))
+        # model.add(TimeDistributed(Dropout(0.5)))
+        model.add(TimeDistributed(MaxPooling2D(pool_size=(2,2))))
+        model.add(TimeDistributed(Conv2D(252, (3, 3), padding='valid', activation='relu')))
         # model.add(TimeDistributed(Dropout(0.5)))
         model.add(TimeDistributed(MaxPooling2D(pool_size=(2,2))))
         model.add(TimeDistributed(Flatten()))
@@ -86,7 +85,7 @@ class LSTMNet(NeuralNet):
             if (cv2.waitKey(10) & 0xFF == ord('q')):
                 break
         cv2.destroyAllWindows()
-    def train(self):
+    def train(self,args):
         from sklearn.metrics import confusion_matrix
         """Traines the neuralnet model.      
         This method requires the following two directory to exist
@@ -97,23 +96,25 @@ class LSTMNet(NeuralNet):
         
         print "model"
         self.model.summary()
-        print "learning rate",LEARNING_RATE
-
+        print "learning rate",args.lr
+        self.preprocessor = self.preprocessor(args.dataset_path)
         
         self.model.compile(loss=keras.losses.categorical_crossentropy,
-                    optimizer=keras.optimizers.Adam(LEARNING_RATE),
+                    optimizer=keras.optimizers.Adam(args.lr),
                     metrics=['accuracy'])
         
         # self.model.compile(loss='categorical_crossentropy', optimizer='SGD', metrics=['accuracy'])
         print self.model.output.shape
+        print "test_sequences", self.preprocessor.test_sequences.shape
+        print "test_labels",self.preprocessor.test_sequence_labels.shape
 
-        self.model.fit_generator(self.preprocessor.flow(),steps_per_epoch=STEPS_PER_EPOCH,
-                        epochs=EPOCHS,
-                        validation_data=(self.preprocessor.test_sequences_dpoints, self.preprocessor.test_sequence_labels))
+        self.model.fit_generator(self.preprocessor.flow(),steps_per_epoch=args.steps,
+                        epochs=args.epochs,
+                        validation_data=(self.preprocessor.test_sequences, self.preprocessor.test_sequence_labels))
         
         score = self.model.evaluate(self.preprocessor.test_sequences, self.preprocessor.test_sequence_labels)
-        self.save_model()
-        self.logger.log_model(self.models_local_folder, score)
+        self.save_model(args)
+        self.logger.log_model(args, score,None)
     def predict(self,sequence_faces):
         assert sequence_faces[0].shape == IMG_SIZE, "Face image size should be "+str(IMG_SIZE)
         face = face.reshape(-1,self.max_sequence_length,48,48,1)
@@ -123,18 +124,11 @@ class LSTMNet(NeuralNet):
 
 
 class DlibLSTMNet(LSTMNet):
-    def __init__(self,input_shape,convnet_model_path=None,preprocessor = None,logger=None,train=True):
-        LSTMNet.__init__(self,input_shape,convnet_model_path,preprocessor,logger,train)
+    def __init__(self,input_shape,convnet_model_path=None,preprocessor = None,logger=None,train=True,max_sequence_length=71):
+        LSTMNet.__init__(self,input_shape,preprocessor,logger,train,max_sequence_length)
        
-        self.models_local_folder = "drnn"
-        self.logs_local_folder = self.models_local_folder
-        if not os.path.exists(os.path.join(LOG_DIR,self.logs_local_folder)):
-            os.makedirs(os.path.join(LOG_DIR,self.logs_local_folder))
-        if logger is None:
-            self.logger = EmopyLogger([os.path.join(LOG_DIR,self.logs_local_folder,self.logs_local_folder+".txt")])
-            print("Logging to file",os.path.join(LOG_DIR,self.logs_local_folder,self.logs_local_folder+".txt"))
-        else:
-            self.logger = logger
+        
+        self.logger = logger
         self.model = self.build()
 
         

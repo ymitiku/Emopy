@@ -8,8 +8,7 @@ class VGGFaceEmopyNet(NeuralNet):
     def __init__(self,input_shape,preprocessor = None,logger=None,train=True,model_architecture="vgg16"):
         self.model_architecture = model_architecture
         NeuralNet.__init__(self,input_shape,preprocessor,logger,train)
-        self.models_local_folder = "vgg"
-        self.logs_local_folder = "vgg"
+   
     def build(self):
         # x = VGGFace(include_top=False, input_shape=self.input_shape)
         vgg_model = VGGFace(include_top=False, input_shape=(48, 48, 3),model=self.model_architecture)

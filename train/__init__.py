@@ -3,6 +3,8 @@ import argparse
 from nets.base import NeuralNet
 from util import SevenEmotionsClassifier,PositiveNeutralClassifier,PositiveNegetiveClassifier
 from preprocess.base import Preprocessor
+from preprocess.dlib_input import DlibInputPreprocessor
+from nets.dlib_inputs import DlibPointsInputNeuralNet
 from preprocess.multinput import MultiInputPreprocessor
 from nets.multinput import MultiInputNeuralNet
 from nets.vggface import VGGFaceEmopyNet
@@ -49,12 +51,18 @@ def get_network(args):
         lgr = EmopyLogger(["logs/log.txt"])
         net = NeuralNet((48,48,1),preprocessor,logger=lgr,train=True)
         return net
+    elif args.net=="dlib":
+        preprocessor = DlibInputPreprocessor(classifier,input_shape=input_shape,batch_size=args.batch,augmentation=args.augmentation,verbose=args.verbose)
+        lgr = EmopyLogger(["logs/log.txt"])
+        net = DlibPointsInputNeuralNet((48,48,1),preprocessor,logger=lgr,train=True)
+        return net
     elif args.net == "face+dlib":
         preprocessor = MultiInputPreprocessor(classifier,input_shape=input_shape,batch_size=args.batch,augmentation=args.augmentation,verbose=args.verbose)
         lgr = EmopyLogger(["logs/log.txt"])
         net = MultiInputNeuralNet((48,48,1),preprocessor,logger=lgr,train=True)
         return net
     elif args.net == "vgg-face":
+        input_shape = (48,48,3)
         preprocessor = Preprocessor(classifier,input_shape=input_shape,batch_size=args.batch,augmentation=args.augmentation,verbose=args.verbose)
         lgr = EmopyLogger(["logs/log.txt"])
         net = VGGFaceEmopyNet((48,48,1),preprocessor,logger=lgr,train=True)
@@ -62,12 +70,12 @@ def get_network(args):
     elif args.net == "rnn":
         preprocessor = SequencialPreprocessor(classifier,input_shape=input_shape,batch_size=args.batch,augmentation=args.augmentation,verbose=args.verbose,max_sequence_length=args.sequence_length)
         lgr = EmopyLogger(["logs/log.txt"])
-        net = LSTMNet(input_shape,None,preprocessor=preprocessor,logger=logger,train=True,max_sequence_length=args.sequence_length)
+        net = LSTMNet(input_shape,preprocessor=preprocessor,logger=lgr,train=True,max_sequence_length=args.sequence_length)
         return net
     elif args.net == "dlib-rnn":
         preprocessor = DlibSequencialPreprocessor(classifier,input_shape=input_shape,batch_size=args.batch,augmentation=args.augmentation,verbose=args.verbose,max_sequence_length=args.sequence_length)
         lgr = EmopyLogger(["logs/log.txt"])
-        net = DlibLSTMNet(input_shape,None,preprocessor=preprocessor,logger=logger,train=True,max_sequence_length=args.sequence_length)
+        net = DlibLSTMNet(input_shape,preprocessor=preprocessor,logger=lgr,train=True,max_sequence_length=args.sequence_length)
         return net
     else:
         raise Exception("net arg should be one of face,face+dlib,vgg-face,rnn or dlib-rnn, but it is "+str(args.net))

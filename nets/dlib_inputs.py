@@ -1,6 +1,6 @@
 from keras.layers  import Input, Flatten, Dense, Conv2D, MaxPooling2D, Dropout
 from keras.models import Sequential,Model, model_from_json
-from train_config import LEARNING_RATE,EPOCHS,BATCH_SIZE,DATA_SET_DIR,LOG_DIR,PATH2SAVE_MODELS,STEPS_PER_EPOCH
+from train_config import LEARNING_RATE,EPOCHS,BATCH_SIZE,DATA_SET_DIR,LOG_DIR,STEPS_PER_EPOCH
 from test_config import MODEL_PATH
 import os
 import keras
@@ -27,25 +27,17 @@ class DlibPointsInputNeuralNet(NeuralNet):
     
     def __init__(self,input_shape,preprocessor = None,logger=None,train=True):
         self.input_shape = input_shape
-        self.models_local_folder = "dinn"
-        self.logs_local_folder = self.models_local_folder
+       
         self.preprocessor = preprocessor
         
-        if not os.path.exists(os.path.join(LOG_DIR,self.logs_local_folder)):
-            os.makedirs(os.path.join(LOG_DIR,self.logs_local_folder))
-        if logger is None:
-            self.logger = EmopyLogger([os.path.join(LOG_DIR,self.logs_local_folder,"nn.txt")])
-        else:
-            self.logger = logger
+        
+        self.logger = logger
         self.feature_extractors = ["dlib"]
         self.number_of_class = self.preprocessor.classifier.get_num_class()
-        if train:
-            self.model = self.build()
-        else:
-            self.model = self.load_model(MODEL_PATH)
-        self.epochs = EPOCHS
-        self.batch_size = BATCH_SIZE
-        self.steps_per_epoch = STEPS_PER_EPOCH
+        
+        self.model = self.build()
+        
+        
 
     def build(self):
         """
@@ -93,7 +85,7 @@ class DlibPointsInputNeuralNet(NeuralNet):
 
     
 
-    def train(self):
+    def train(self,args):
         """Traines the neuralnet model.      
         This method requires the following two directory to exist
         /PATH-TO-DATASET-DIR/train
@@ -103,18 +95,18 @@ class DlibPointsInputNeuralNet(NeuralNet):
         assert self.built == True , "Model not built yet."
         
         self.model.compile(loss=keras.losses.categorical_crossentropy,
-                    optimizer=keras.optimizers.Adam(LEARNING_RATE),
+                    optimizer=keras.optimizers.Adam(args.lr),
                     metrics=['accuracy'])
         # self.model.fit(x_train,y_train,epochs = EPOCHS, 
         #                 batch_size = BATCH_SIZE,validation_data=(x_test,y_test))
-        self.preprocessor = self.preprocessor(DATA_SET_DIR)
+        self.preprocessor = self.preprocessor(args.dataset_path)
         self.model.summary()
-        self.model.fit_generator(self.preprocessor.flow(),steps_per_epoch=self.steps_per_epoch,
-                        epochs=self.epochs,
+        self.model.fit_generator(self.preprocessor.flow(),steps_per_epoch=args.steps,
+                        epochs=args.epochs,
                         validation_data=([self.preprocessor.test_dpoints,self.preprocessor.dpointsDists,self.preprocessor.dpointsAngles], self.preprocessor.test_image_emotions))
         score = self.model.evaluate([self.preprocessor.test_dpoints,self.preprocessor.dpointsDists,self.preprocessor.dpointsAngles], self.preprocessor.test_image_emotions)
-        self.save_model()
-        self.logger.log_model(self.models_local_folder, score)
+        self.save_model(args)
+        self.logger.log_model(args, score,None)
 
     def predict(self,face):
         assert face.shape == IMG_SIZE, "Face image size should be "+str(IMG_SIZE)
